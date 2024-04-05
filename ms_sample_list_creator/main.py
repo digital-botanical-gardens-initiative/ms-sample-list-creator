@@ -1,12 +1,13 @@
 # To convert this script into a .exe file: pyinstaller --onefile Mass_Spec_win7.py in anaconda prompt
 
-import tkinter as tk
-from tkinter import filedialog
-from tkinter import ttk
-import os
-import requests
-from datetime import datetime
 import csv
+import os
+import tkinter as tk
+from datetime import datetime
+from tkinter import filedialog, ttk
+
+import requests
+
 
 class HomeWindow(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
@@ -25,8 +26,8 @@ class HomeWindow(tk.Frame):
         self.blk_pos = tk.StringVar()
         self.inj_volume = tk.IntVar()
 
-        error1 = os.environ.get("error1")
-        error2 = os.environ.get("error2")
+        error1 = os.environ.get("ERROR1")
+        error2 = os.environ.get("ERROR2")
 
         if not error1 and not error2:
             # Create widgets for the main page
@@ -36,12 +37,11 @@ class HomeWindow(tk.Frame):
             # Create widgets for the main page
             label = tk.Label(self, text=error1)
             label.pack()
-            
+
         elif error2:
             # Create widgets for the main page
             label = tk.Label(self, text=error2)
             label.pack()
-
 
         # Create text entry fields
         frame_labels_up = tk.Frame(self)
@@ -50,7 +50,7 @@ class HomeWindow(tk.Frame):
         label_username = tk.Label(frame_labels_up, text="Directus username:")
         label_username.pack(side="left", padx=8, anchor="center")
         label_password = tk.Label(frame_labels_up, text="Directus password:   ")
-        label_password.pack(side="right", padx=(0, 2),anchor="center")
+        label_password.pack(side="right", padx=(0, 2), anchor="center")
 
         frame_entries_up = tk.Frame(self)
         frame_entries_up.pack(fill="x", pady=5)
@@ -59,7 +59,7 @@ class HomeWindow(tk.Frame):
         entry_username.pack(side="left", anchor="center")
         entry_password = tk.Entry(frame_entries_up, textvariable=self.password, show="*")
         entry_password.pack(side="right", anchor="center")
-        
+
         frame_labels_om = tk.Frame(self)
         frame_labels_om.pack(fill="x", pady=(5, 0))
 
@@ -196,15 +196,15 @@ class HomeWindow(tk.Frame):
     def data_folder(self):
         data_folder = filedialog.askdirectory()
         if data_folder:
-            os.environ['data_folder'] = data_folder
+            os.environ["DATA_FOLDER"] = data_folder
             parts = data_folder.split("/")
             folder = parts[-1]
             self.data_path_button.config(text=folder)
-    
+
     def output_folder(self):
         output_folder = filedialog.askdirectory()
         if output_folder:
-            os.environ['output_folder'] = output_folder
+            os.environ["OUTPUT_FOLDER"] = output_folder
             parts = output_folder.split("/")
             folder = parts[-1]
             self.output_path_button.config(text=folder)
@@ -212,7 +212,7 @@ class HomeWindow(tk.Frame):
     def method_file(self):
         method_file = filedialog.askopenfilename(filetypes=[("methods", "*.meth")]).split(".")[0]
         if method_file:
-            os.environ['method_file'] = method_file
+            os.environ["METHOD_FILE"] = method_file
             parts = method_file.split("/")
             self.file = parts[-1]
             self.method_path_button.config(text=self.file)
@@ -220,24 +220,24 @@ class HomeWindow(tk.Frame):
     def standby_file(self):
         standby_file = filedialog.askopenfilename(filetypes=[("methods", "*.meth")]).split(".")[0]
         if standby_file:
-            os.environ['standby_file'] = standby_file
+            os.environ["STANDBY_FILE"] = standby_file
             parts = standby_file.split("/")
             file = parts[-1]
             self.standby_path_button.config(text=file)
 
     def show_values(self):
         # Retrieve the entered values
-        os.environ['username'] = self.username.get()
-        os.environ['password'] = self.password.get()
-        os.environ['operator'] = self.operator.get()
-        os.environ['ms_id'] = self.ms_id.get()
-        os.environ['col_rack_number'] = str(self.col_rack_number.get())
-        os.environ['row_rack_number'] = str(self.row_rack_number.get())
-        os.environ['pre_blk'] = str(self.pre_blk.get())
-        os.environ['post_blk'] = str(self.post_blk.get())
-        os.environ['blk_name'] = self.blk_name.get()
-        os.environ['blk_pos'] = self.blk_pos.get()
-        os.environ['inj_volume'] = str(self.inj_volume.get())
+        os.environ["USERNAME"] = self.username.get()
+        os.environ["PASSWORD"] = self.password.get()
+        os.environ["OPERATOR"] = self.operator.get()
+        os.environ["MS_ID"] = self.ms_id.get()
+        os.environ["COL_RACK_NUMBER"] = str(self.col_rack_number.get())
+        os.environ["row_rack_number"] = str(self.row_rack_number.get())
+        os.environ["pre_blk"] = str(self.pre_blk.get())
+        os.environ["post_blk"] = str(self.post_blk.get())
+        os.environ["blk_name"] = self.blk_name.get()
+        os.environ["blk_pos"] = self.blk_pos.get()
+        os.environ["inj_volume"] = str(self.inj_volume.get())
         self.testConnection()
         self.master.destroy()
 
@@ -248,9 +248,11 @@ class HomeWindow(tk.Frame):
         operator = os.environ.get("operator")
 
         output_folder = os.environ.get("output_folder")
-        csv_window = CsvWindow(root=window, csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv")
+        csv_window = CsvWindow(
+            root=window, csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv"
+        )
         csv_window()
-        
+
     def testConnection(self):
         username = os.environ.get("username")
         password = os.environ.get("password")
@@ -263,30 +265,41 @@ class HomeWindow(tk.Frame):
         data_folder = os.environ.get("data_folder")
         output_folder = os.environ.get("output_folder")
 
-        if username and password and operator and ms_id and col_rack_number and row_rack_number and inj_volume and method_file and data_folder and output_folder:
+        if (
+            username
+            and password
+            and operator
+            and ms_id
+            and col_rack_number
+            and row_rack_number
+            and inj_volume
+            and method_file
+            and data_folder
+            and output_folder
+        ):
             # Define the Directus base URL
-            base_url = 'http://directus.dbgi.org'
+            base_url = "http://directus.dbgi.org"
 
             # Define the login endpoint URL
-            login_url = base_url + '/auth/login'
+            login_url = base_url + "/auth/login"
             # Create a session object for making requests
             session = requests.Session()
             # Send a POST request to the login endpoint
-            response = session.post(login_url, json={'email': username, 'password': password})
-        
+            response = session.post(login_url, json={"email": username, "password": password})
+
             if response.status_code == 200:
-                os.environ['error1'] = ""
-                os.environ['error2'] = ""
-                data = response.json()['data']
-                access_token = data['access_token']
-                os.environ['access_token'] = str(access_token)
+                os.environ["error1"] = ""
+                os.environ["error2"] = ""
+                data = response.json()["data"]
+                access_token = data["access_token"]
+                os.environ["access_token"] = str(access_token)
 
                 access_token = os.environ.get("access_token")
-                base_url = 'http://directus.dbgi.org'
-                collection_url = base_url + f'/items/Injection_Methods/{self.file}'
+                base_url = "http://directus.dbgi.org"
+                collection_url = base_url + f"/items/Injection_Methods/{self.file}"
                 session = requests.Session()
-                session.headers.update({'Authorization': f'Bearer {access_token}'})
-                #collection_url = base_url + '/items/samples'
+                session.headers.update({"Authorization": f"Bearer {access_token}"})
+                # collection_url = base_url + '/items/samples'
                 response = session.get(collection_url)
                 value = response.status_code
                 if value == 200:
@@ -294,27 +307,27 @@ class HomeWindow(tk.Frame):
                     self.open_CsvWindow()
                 else:
                     # Send data to directus
-                    base_url = 'http://directus.dbgi.org'
-                    collection_url = base_url + '/items/Injection_Methods'
+                    base_url = "http://directus.dbgi.org"
+                    collection_url = base_url + "/items/Injection_Methods"
                     session = requests.Session()
-                    session.headers.update({'Authorization': f'Bearer {access_token}'})
+                    session.headers.update({"Authorization": f"Bearer {access_token}"})
 
-                    #Add headers
-                    headers = {'Content-Type': 'application/json'}
+                    # Add headers
+                    headers = {"Content-Type": "application/json"}
 
-                    data = {'method_name': self.file}
-        
+                    data = {"method_name": self.file}
+
                     response = session.post(url=collection_url, headers=headers, json=data)
-    
+
                     if response.status_code == 200:
                         # Hide the main page and open Window 2
-                        self.open_CsvWindow() 
-            
+                        self.open_CsvWindow()
+
             else:
                 # Recreate the main page
                 error1 = "Wrong directus credentials/not connected to UNIFR network"
-                os.environ['error1'] = error1
-                os.environ['error2'] = ""
+                os.environ["error1"] = error1
+                os.environ["error2"] = ""
                 self.pack_forget()
                 main_page = HomeWindow(window)
                 main_page.pack()
@@ -323,12 +336,13 @@ class HomeWindow(tk.Frame):
         else:
             # Recreate the main page
             error2 = "Please provide all asked values"
-            os.environ['error2'] = error2
-            os.environ['error1'] = ""
+            os.environ["error2"] = error2
+            os.environ["error1"] = ""
             self.pack_forget()
             main_page = HomeWindow(window)
             main_page.pack()
             window.mainloop()
+
 
 class CsvWindow:
     def __init__(self, root, csv_path):
@@ -354,7 +368,21 @@ class CsvWindow:
         self.current_row = 1
 
         # Create Treeview widget
-        self.tree = ttk.Treeview(root, columns=("aliquot_id", "operator", "ms_id", "File Name", "Path", "Instrument Method", "Position", "Inj Vol"), show="headings", selectmode="browse")
+        self.tree = ttk.Treeview(
+            root,
+            columns=(
+                "aliquot_id",
+                "operator",
+                "ms_id",
+                "File Name",
+                "Path",
+                "Instrument Method",
+                "Position",
+                "Inj Vol",
+            ),
+            show="headings",
+            selectmode="browse",
+        )
         self.tree.heading("aliquot_id", text="aliquot_id")
         self.tree.heading("operator", text="operator")
         self.tree.heading("ms_id", text="ms_id")
@@ -381,8 +409,6 @@ class CsvWindow:
         self.tree.grid(row=0, column=0, padx=10, pady=10, columnspan=2)
         self.aliquot_id_entry.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         submit_button.grid(row=3, column=1, columnspan=2, pady=10)
-        
-        
 
     def add_row(self, event=None):
         # Get data from entry widgets
@@ -393,7 +419,7 @@ class CsvWindow:
             # Display an error message
             self.label.config(text="aliquot id can't be empty!", foreground="red")
             return
-        
+
         parts = self.method_file.split("/")
         file = parts[-1]
 
@@ -404,27 +430,31 @@ class CsvWindow:
         inj_volume = self.inj_volume
 
         # Send data to directus
-        base_url = 'http://directus.dbgi.org'
-        collection_url = base_url + '/items/Mass_Spectrometry_Analysis'
+        base_url = "http://directus.dbgi.org"
+        collection_url = base_url + "/items/Mass_Spectrometry_Analysis"
         session = requests.Session()
-        session.headers.update({'Authorization': f'Bearer {self.access_token}'})
+        session.headers.update({"Authorization": f"Bearer {self.access_token}"})
 
-        #Add headers
-        headers = {'Content-Type': 'application/json'}
+        # Add headers
+        headers = {"Content-Type": "application/json"}
 
-        data = {'aliquot_id': aliquot_id,
-                'mass_spec_id': filename,
-                'ms_id': self.ms_id,
-                'injection_volume': inj_volume,
-                'injection_method': file}
-        
+        data = {
+            "aliquot_id": aliquot_id,
+            "mass_spec_id": filename,
+            "ms_id": self.ms_id,
+            "injection_volume": inj_volume,
+            "injection_method": file,
+        }
+
         response = session.post(url=collection_url, headers=headers, json=data)
 
         self.label.config(text="")
-    
+
         if response.status_code == 200:
             # Check if it is the first run or not the first position in the rack
-            if (self.current_position > self.col_rack_size and self.current_position > self.col_rack_size) or (self.current_position == 1 and self.current_row == 1):
+            if (self.current_position > self.col_rack_size and self.current_position > self.col_rack_size) or (
+                self.current_position == 1 and self.current_row == 1
+            ):
                 # Open window to ask prefix
                 ask_prefix_window = tk.Toplevel(self.root)
                 ask_prefix_window.title("Add Prefix")
@@ -436,7 +466,7 @@ class CsvWindow:
                 ask_prefix_window.wait_window(self.ask_box)
 
             prefix = os.environ.get("prefix")
-            alphabet_letter = chr(ord('A') + self.current_row - 1)
+            alphabet_letter = chr(ord("A") + self.current_row - 1)
             position = f"{prefix}{alphabet_letter}{self.current_position}"
 
             # Update position and box for the next row
@@ -453,7 +483,11 @@ class CsvWindow:
             # display success message
             self.label.config(text="Correctly added!", foreground="green")
             # Insert data into Treeview
-            item_id = self.tree.insert("", "end", values=(aliquot_id, self.operator, self.ms_id, filename, path, instrument_method, position, inj_volume))
+            item_id = self.tree.insert(
+                "",
+                "end",
+                values=(aliquot_id, self.operator, self.ms_id, filename, path, instrument_method, position, inj_volume),
+            )
 
             # Scroll to the last added row
             self.tree.see(item_id)
@@ -476,7 +510,7 @@ class CsvWindow:
             return
 
         # Extract data from the Treeview
-        raw_data = [self.tree.item(item, 'values')[3:] for item in all_items]  # Skip the first two elements
+        raw_data = [self.tree.item(item, "values")[3:] for item in all_items]  # Skip the first two elements
         data_to_export = sorted(raw_data, key=blanks_first)
         print(data_to_export)
 
@@ -491,7 +525,15 @@ class CsvWindow:
             if self.pre_blk > 0:
                 for i in range(1, self.pre_blk + 1):
                     padded_number = str(i).zfill(2)
-                    filename = datetime.now().strftime("%Y%m%d") + "_" + self.operator + "_dbgi_" + self.blk_name + "_blk_pre" + padded_number
+                    filename = (
+                        datetime.now().strftime("%Y%m%d")
+                        + "_"
+                        + self.operator
+                        + "_dbgi_"
+                        + self.blk_name
+                        + "_blk_pre"
+                        + padded_number
+                    )
                     path = self.data_path.replace("/", "\\")
                     instrument_method = self.method_file.replace("/", "\\")
                     position = self.blk_pos
@@ -502,12 +544,20 @@ class CsvWindow:
 
             # Write data
             csv_writer.writerows(data_to_export)
-            
+
             # Write post blanks
             if self.post_blk > 0:
                 for i in range(1, self.post_blk + 1):
                     padded_number = str(i).zfill(2)
-                    filename = datetime.now().strftime("%Y%m%d") + "_" + self.operator + "_dbgi_" + self.blk_name + "_blk_post" + padded_number
+                    filename = (
+                        datetime.now().strftime("%Y%m%d")
+                        + "_"
+                        + self.operator
+                        + "_dbgi_"
+                        + self.blk_name
+                        + "_blk_post"
+                        + padded_number
+                    )
                     path = self.data_path.replace("/", "\\")
                     instrument_method = self.method_file.replace("/", "\\")
                     position = self.blk_pos
@@ -536,33 +586,36 @@ class CsvWindow:
         password = os.environ.get("password")
 
         # Define the Directus base URL
-        base_url = 'http://directus.dbgi.org'
+        base_url = "http://directus.dbgi.org"
 
         # Define the login endpoint URL
-        login_url = base_url + '/auth/login'
+        login_url = base_url + "/auth/login"
         # Create a session object for making requests
         session = requests.Session()
         # Send a POST request to the login endpoint
-        response = session.post(login_url, json={'email': username, 'password': password})
-        
+        response = session.post(login_url, json={"email": username, "password": password})
+
         if response.status_code == 200:
-            data = response.json()['data']
-            self.access_token = data['access_token']
-            self.root.event_generate('<Return>')
-            
+            data = response.json()["data"]
+            self.access_token = data["access_token"]
+            self.root.event_generate("<Return>")
+
         else:
             # Display error statement
             self.label.config(text="Reconnexion to directus failed", foreground="red")
 
     # Permits to sort the samples and put the blanks at the beginning
+
+
 def blanks_first(item):
     # Extract the sample ID from the file name
-    sample_id = item[0].split('_')[3]
+    sample_id = item[0].split("_")[3]
     # Check if the sample ID contains 'batch'
-    if sample_id.startswith('batch'):
+    if sample_id.startswith("batch"):
         return (0, sample_id)  # If yes, put it in first place
     else:
         return (1, sample_id)  # Else, put it after
+
 
 class AskBoxPrefixWindow(tk.Frame):
     def __init__(self, root):
@@ -585,11 +638,10 @@ class AskBoxPrefixWindow(tk.Frame):
         button_submit.pack()
 
     def store_prefix(self):
-        os.environ['prefix'] = self.prefix.get()
+        os.environ["prefix"] = self.prefix.get()
 
         # Close the AskBoxPrefixWindow
         self.master.destroy()
-        
 
 
 # Create the main window

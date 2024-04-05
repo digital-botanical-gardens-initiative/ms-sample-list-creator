@@ -2,7 +2,7 @@
 name = "ms_sample_list_creator"
 version = "0.0.1"
 description = "A tool to automatically genereate MS sample lists for the DBGI project"
-authors = ["Edouard Brülhart <fedouard.bruelhart@unifr.ch>"]
+authors = ["Edouard Brülhart <edouard.bruelhart@unifr.ch>"]
 repository = "https://github.com/digital-botanical-gardens-initiative//ms-sample-list-creator"
 documentation = "https://digital-botanical-gardens-initiative/.github.io/ms-sample-list-creator/"
 readme = "README.md"

@@ -23,7 +23,7 @@ jobs:
         uses: ./.github/actions/setup-poetry-env
 
       - name: install stubs
-        run: mypy --install-types
+        run: poetry run mypy --install-types
 
       - name: Run checks
         run: make check

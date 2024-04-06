@@ -5,26 +5,39 @@ import os
 import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog, ttk
+from typing import Any
 
 import requests
 
 
 class HomeWindow(tk.Frame):
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent: tk.Widget, *args: Any, **kwargs: Any):
+        """
+        Initializes an instance of the class.
+
+        Args:
+            parent (tk.Widget): The parent widget or window where this frame will be placed.
+            *args: Additional positional arguments that may be passed to the parent class constructor (optional).
+            **kwargs: Additional keyword arguments that may be passed to the parent class constructor (optional).
+
+        Returns:
+            None
+        """
+
         tk.Frame.__init__(self, parent, *args, **kwargs)
 
         # Create a variable to store the entered text
-        self.username = tk.StringVar()
-        self.password = tk.StringVar()
-        self.operator = tk.StringVar()
-        self.ms_id = tk.StringVar()
-        self.col_rack_number = tk.IntVar()
-        self.row_rack_number = tk.IntVar()
-        self.pre_blk = tk.IntVar()
-        self.post_blk = tk.IntVar()
-        self.blk_name = tk.StringVar()
-        self.blk_pos = tk.StringVar()
-        self.inj_volume = tk.IntVar()
+        self.username = tk.StringVar(None)
+        self.password = tk.StringVar(None)
+        self.operator = tk.StringVar(None)
+        self.ms_id = tk.StringVar(None)
+        self.col_rack_number = tk.IntVar(None)
+        self.row_rack_number = tk.IntVar(None)
+        self.pre_blk = tk.IntVar(None)
+        self.post_blk = tk.IntVar(None)
+        self.blk_name = tk.StringVar(None)
+        self.blk_pos = tk.StringVar(None)
+        self.inj_volume = tk.IntVar(None)
 
         error1 = os.environ.get("ERROR1")
         error2 = os.environ.get("ERROR2")
@@ -88,14 +101,14 @@ class HomeWindow(tk.Frame):
         frame_entries_rack.pack(fill="x", pady=(5, 0))
 
         entry_col_rack_number = tk.Entry(frame_entries_rack, textvariable=self.col_rack_number)
-        self.col_rack_number.set("9")
+        self.col_rack_number.set(9)
         entry_col_rack_number.pack(side="left", anchor="center")
 
         label_x = tk.Label(frame_entries_rack, text="x")
         label_x.pack(side="left", padx=40, anchor="center")
 
         entry_row_rack_number = tk.Entry(frame_entries_rack, textvariable=self.row_rack_number)
-        self.row_rack_number.set("6")
+        self.row_rack_number.set(6)
         entry_row_rack_number.pack(side="right", anchor="center")
 
         frame_labels_blk = tk.Frame(self)
@@ -111,11 +124,11 @@ class HomeWindow(tk.Frame):
         frame_entries_blk.pack(fill="x", pady=(5, 0))
 
         entry_pre_blk = tk.Entry(frame_entries_blk, textvariable=self.pre_blk)
-        self.pre_blk.set("4")
+        self.pre_blk.set(4)
         entry_pre_blk.pack(side="left", anchor="center")
 
         entry_post_blk = tk.Entry(frame_entries_blk, textvariable=self.post_blk)
-        self.post_blk.set("3")
+        self.post_blk.set(3)
         entry_post_blk.pack(side="right", anchor="center")
 
         frame_labels_np = tk.Frame(self)
@@ -169,7 +182,7 @@ class HomeWindow(tk.Frame):
         frame_entries_io.pack(fill="x", pady=(5, 0))
 
         entry_inj_volume = tk.Entry(frame_entries_io, textvariable=self.inj_volume)
-        self.inj_volume.set("2")
+        self.inj_volume.set(2)
         entry_inj_volume.pack(side="left")
 
         self.output_path_button = tk.Button(frame_entries_io, text="output", command=self.output_folder)
@@ -193,7 +206,17 @@ class HomeWindow(tk.Frame):
         button_submit = tk.Button(frame_submit, text="Confirm", command=self.show_values)
         button_submit.pack(side="right")
 
-    def data_folder(self):
+    def data_folder(self) -> None:
+        """
+        Asks the user to choose the data folder where MS data will be stored.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         data_folder = filedialog.askdirectory()
         if data_folder:
             os.environ["DATA_FOLDER"] = data_folder
@@ -201,7 +224,16 @@ class HomeWindow(tk.Frame):
             folder = parts[-1]
             self.data_path_button.config(text=folder)
 
-    def output_folder(self):
+    def output_folder(self) -> None:
+        """
+        Asks the user to choose the output folder where CSV will be written.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         output_folder = filedialog.askdirectory()
         if output_folder:
             os.environ["OUTPUT_FOLDER"] = output_folder
@@ -209,7 +241,16 @@ class HomeWindow(tk.Frame):
             folder = parts[-1]
             self.output_path_button.config(text=folder)
 
-    def method_file(self):
+    def method_file(self) -> None:
+        """
+        Asks the user to choose the injection method file he wants to use.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         method_file = filedialog.askopenfilename(filetypes=[("methods", "*.meth")]).split(".")[0]
         if method_file:
             os.environ["METHOD_FILE"] = method_file
@@ -217,7 +258,16 @@ class HomeWindow(tk.Frame):
             self.file = parts[-1]
             self.method_path_button.config(text=self.file)
 
-    def standby_file(self):
+    def standby_file(self) -> None:
+        """
+        Asks the user to choose the Standby method file he wants to use.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         standby_file = filedialog.askopenfilename(filetypes=[("methods", "*.meth")]).split(".")[0]
         if standby_file:
             os.environ["STANDBY_FILE"] = standby_file
@@ -225,45 +275,73 @@ class HomeWindow(tk.Frame):
             file = parts[-1]
             self.standby_path_button.config(text=file)
 
-    def show_values(self):
+    def show_values(self) -> None:
+        """
+        Stores all the parameters to the environment when user confirms his choice.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Retrieve the entered values
         os.environ["USERNAME"] = self.username.get()
         os.environ["PASSWORD"] = self.password.get()
         os.environ["OPERATOR"] = self.operator.get()
         os.environ["MS_ID"] = self.ms_id.get()
         os.environ["COL_RACK_NUMBER"] = str(self.col_rack_number.get())
-        os.environ["row_rack_number"] = str(self.row_rack_number.get())
-        os.environ["pre_blk"] = str(self.pre_blk.get())
-        os.environ["post_blk"] = str(self.post_blk.get())
-        os.environ["blk_name"] = self.blk_name.get()
-        os.environ["blk_pos"] = self.blk_pos.get()
-        os.environ["inj_volume"] = str(self.inj_volume.get())
+        os.environ["ROW_RACK_NUMBER"] = str(self.row_rack_number.get())
+        os.environ["PRE_BLK"] = str(self.pre_blk.get())
+        os.environ["POST_BLK"] = str(self.post_blk.get())
+        os.environ["BLK_NAME"] = self.blk_name.get()
+        os.environ["BLK_POS"] = self.blk_pos.get()
+        os.environ["INJ_VOLUME"] = str(self.inj_volume.get())
         self.testConnection()
         self.master.destroy()
 
-    def open_CsvWindow(self):
+    def open_CsvWindow(self) -> None:
+        """
+        Hides the main window and initializes the sample list window.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Hide the main page
         self.pack_forget()
 
-        operator = os.environ.get("operator")
+        operator = os.environ.get("OPERATOR")
 
-        output_folder = os.environ.get("output_folder")
-        csv_window = CsvWindow(
+        output_folder = os.environ.get("OUTPUT_FOLDER")
+        CsvWindow(
             root=window, csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv"
         )
-        csv_window()
 
-    def testConnection(self):
-        username = os.environ.get("username")
-        password = os.environ.get("password")
-        operator = os.environ.get("operator")
-        ms_id = os.environ.get("ms_id")
-        col_rack_number = os.environ.get("col_rack_number")
-        row_rack_number = os.environ.get("row_rack_number")
-        inj_volume = os.environ.get("inj_volume")
-        method_file = os.environ.get("method_file")
-        data_folder = os.environ.get("data_folder")
-        output_folder = os.environ.get("output_folder")
+    def testConnection(self) -> None:
+        """
+        Controls that user has passed all the necessary arguments.
+        If it is the case, it tries to connect to directus and if connection is successful,
+        stores the access token for further requests.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        username = os.environ.get("USERNAME")
+        password = os.environ.get("PASSWORD")
+        operator = os.environ.get("OPERATOR")
+        ms_id = os.environ.get("MS_ID")
+        col_rack_number = os.environ.get("COL_RACK_NUMBER")
+        row_rack_number = os.environ.get("ROW_RACK_NUMBER")
+        inj_volume = os.environ.get("INJ_VOLUME")
+        method_file = os.environ.get("METHOD_FILE")
+        data_folder = os.environ.get("DATA_FOLDER")
+        output_folder = os.environ.get("OUTPUT_FOLDER")
 
         if (
             username
@@ -286,15 +364,18 @@ class HomeWindow(tk.Frame):
             session = requests.Session()
             # Send a POST request to the login endpoint
             response = session.post(login_url, json={"email": username, "password": password})
-
-            if response.status_code == 200:
-                os.environ["error1"] = ""
-                os.environ["error2"] = ""
+            # Test if connection is successful
+            if response.status_code == 200: 
+                # Reinitialize error codes
+                os.environ["ERROR1"] = ""
+                os.environ["ERROR2"] = ""
+                # Stores the access token
                 data = response.json()["data"]
                 access_token = data["access_token"]
-                os.environ["access_token"] = str(access_token)
+                os.environ["ACCESS_TOKEN"] = str(access_token)
 
-                access_token = os.environ.get("access_token")
+                #Test if the method is already present in directus
+                access_token = os.environ.get("ACCESS_TOKEN")
                 base_url = "http://directus.dbgi.org"
                 collection_url = base_url + f"/items/Injection_Methods/{self.file}"
                 session = requests.Session()
@@ -302,9 +383,11 @@ class HomeWindow(tk.Frame):
                 # collection_url = base_url + '/items/samples'
                 response = session.get(collection_url)
                 value = response.status_code
+                # if already present, launches the sample list window
                 if value == 200:
                     # Hide the main page and open Window 2
                     self.open_CsvWindow()
+                # else adds the new method to directus
                 else:
                     # Send data to directus
                     base_url = "http://directus.dbgi.org"
@@ -318,51 +401,56 @@ class HomeWindow(tk.Frame):
                     data = {"method_name": self.file}
 
                     response = session.post(url=collection_url, headers=headers, json=data)
-
+                    
+                    # if method is successfully added to directus, launchtes the sample list window
                     if response.status_code == 200:
                         # Hide the main page and open Window 2
-                        self.open_CsvWindow()
+                        self.open_CsvWindow()   
 
+            # If connection to directus failed, informs the user that connection failed.
             else:
                 # Recreate the main page
                 error1 = "Wrong directus credentials/not connected to UNIFR network"
-                os.environ["error1"] = error1
-                os.environ["error2"] = ""
+                os.environ["ERROR1"] = error1
+                os.environ["ERROR2"] = ""
+                window_frame = tk.Frame(window)
+                window_frame.pack(fill="both", expand=True)
                 self.pack_forget()
-                main_page = HomeWindow(window)
-                main_page.pack()
+                main_page = HomeWindow(window_frame)
+                main_page.pack(fill="both", expand=True)
                 window.mainloop()
 
         else:
             # Recreate the main page
             error2 = "Please provide all asked values"
-            os.environ["error2"] = error2
-            os.environ["error1"] = ""
+            os.environ["ERROR2"] = error2
+            os.environ["ERROR1"] = ""
+            window_frame = tk.Frame(window)
+            window_frame.pack(fill="both", expand=True)
             self.pack_forget()
-            main_page = HomeWindow(window)
-            main_page.pack()
+            main_page = HomeWindow(window_frame)
+            main_page.pack(fill="both", expand=True)
             window.mainloop()
 
 
 class CsvWindow:
     def __init__(self, root, csv_path):
-        print("This error doesn't impact the behaviour. It will be corrected in next versions")
         self.root = root
         self.root.title("Mass spec sample list")
 
-        self.operator = os.environ.get("operator")
-        self.ms_id = os.environ.get("ms_id")
-        self.col_rack_size = int(os.environ.get("col_rack_number"))
-        self.row_rack_size = int(os.environ.get("row_rack_number"))
-        self.pre_blk = int(os.environ.get("pre_blk"))
-        self.post_blk = int(os.environ.get("post_blk"))
-        self.blk_name = os.environ.get("blk_name")
-        self.blk_pos = os.environ.get("blk_pos")
-        self.inj_volume = int(os.environ.get("inj_volume"))
-        self.access_token = os.environ.get("access_token")
-        self.method_file = os.environ.get("method_file")
-        self.data_path = os.environ.get("data_folder")
-        self.standby_file = os.environ.get("standby_file")
+        self.operator = os.environ.get("OPERATOR")
+        self.ms_id = os.environ.get("MS_ID")
+        self.col_rack_size = int(os.environ.get("COL_RACK_NUMBER"))
+        self.row_rack_size = int(os.environ.get("ROW_RACK_NUMBER"))
+        self.pre_blk = int(os.environ.get("PRE_BLK"))
+        self.post_blk = int(os.environ.get("POST_BLK"))
+        self.blk_name = os.environ.get("BLK_NAME")
+        self.blk_pos = os.environ.get("LK_POS")
+        self.inj_volume = int(os.environ.get("INJ_VOLUME"))
+        self.access_token = os.environ.get("ACCESS_TOKEN")
+        self.method_file = os.environ.get("METHOD_FILE")
+        self.data_path = os.environ.get("DATA_FOLDER")
+        self.standby_file = os.environ.get("STANDBY_FILE")
         self.csv_path = csv_path
         self.current_position = 1
         self.current_row = 1
@@ -409,6 +497,9 @@ class CsvWindow:
         self.tree.grid(row=0, column=0, padx=10, pady=10, columnspan=2)
         self.aliquot_id_entry.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         submit_button.grid(row=3, column=1, columnspan=2, pady=10)
+
+        # Start the Tkinter event loop
+        self.root.mainloop()
 
     def add_row(self, event=None):
         # Get data from entry widgets
@@ -465,7 +556,7 @@ class CsvWindow:
                 ask_prefix_window.transient(self.root)
                 ask_prefix_window.wait_window(self.ask_box)
 
-            prefix = os.environ.get("prefix")
+            prefix = os.environ.get("PREFIX")
             alphabet_letter = chr(ord("A") + self.current_row - 1)
             position = f"{prefix}{alphabet_letter}{self.current_position}"
 
@@ -582,8 +673,8 @@ class CsvWindow:
         self.root.destroy()
 
     def directus_reconnect(self):
-        username = os.environ.get("username")
-        password = os.environ.get("password")
+        username = os.environ.get("USERNAME")
+        password = os.environ.get("PASSWORD")
 
         # Define the Directus base URL
         base_url = "http://directus.dbgi.org"
@@ -624,7 +715,7 @@ class AskBoxPrefixWindow(tk.Frame):
         self.prefix = tk.StringVar()
 
         # Adjust the window size
-        root.geometry("300x150")  # Set the desired width and height
+        root.geometry("300x150")
 
         # Label + textbox to enter prefix
         label_prefix = tk.Label(self, text="Box's prefix:")
@@ -638,7 +729,7 @@ class AskBoxPrefixWindow(tk.Frame):
         button_submit.pack()
 
     def store_prefix(self):
-        os.environ["prefix"] = self.prefix.get()
+        os.environ["PREFIX"] = self.prefix.get()
 
         # Close the AskBoxPrefixWindow
         self.master.destroy()

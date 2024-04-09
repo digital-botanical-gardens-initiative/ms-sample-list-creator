@@ -1,4 +1,4 @@
-# To convert this script into a .exe file: pyinstaller --onefile Mass_Spec_win7.py in anaconda prompt
+# Generate windows executable: wine pyinstaller --onefile main.py
 
 import csv
 import os

@@ -395,6 +395,8 @@ class HomeWindow(tk.Frame):
 
         operator = os.environ.get("OPERATOR")
 
+        window = tk.Toplevel()
+
         output_folder = os.environ.get("OUTPUT_FOLDER")
         CsvWindow(
             root=window, csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv"
@@ -402,7 +404,7 @@ class HomeWindow(tk.Frame):
 
 
 class CsvWindow:
-    def __init__(self, root: tk.Tk, csv_path: str):
+    def __init__(self, root: tk.Toplevel, csv_path: str):
         """
         Initializes an instance of the class.
 
@@ -414,7 +416,7 @@ class CsvWindow:
             None
         """
         self.root = root
-        self.root.title("Mass spec sample list")
+        # self.root.title("Mass spec sample list")
 
         self.operator = str(os.environ.get("OPERATOR"))
         self.ms_id = str(os.environ.get("MS_ID"))
@@ -465,7 +467,7 @@ class CsvWindow:
         self.aliquot_id_entry = ttk.Entry(root)
 
         # Error text hidden:
-        self.label = ttk.Label(text="")
+        self.label = ttk.Label(root, text="")
         self.label.grid(row=2, column=0, columnspan=2, pady=10)
 
         # Submit button
@@ -529,7 +531,7 @@ class CsvWindow:
 
         self.label.config(text="")
 
-        if response.status_code != 200:
+        if response.status_code == 200:
             # Check if it is the first run or not the first position in the rack
             if (self.current_position > self.col_rack_size and self.current_position > self.col_rack_size) or (
                 self.current_position == 1 and self.current_row == 1

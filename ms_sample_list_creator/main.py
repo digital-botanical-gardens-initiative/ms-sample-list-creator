@@ -396,19 +396,21 @@ class HomeWindow(tk.Frame):
         """
         # Hide the main page
         self.pack_forget()
+        window.destroy()
 
         operator = os.environ.get("OPERATOR")
 
-        window = tk.Toplevel()
+        window2 = tk.Tk()
 
         output_folder = os.environ.get("OUTPUT_FOLDER")
         CsvWindow(
-            root=window, csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv"
+            root=window2,
+            csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv",
         )
 
 
 class CsvWindow:
-    def __init__(self, root: tk.Toplevel, csv_path: str):
+    def __init__(self, root: tk.Tk, csv_path: str):
         """
         Initializes an instance of the class.
 
@@ -420,7 +422,6 @@ class CsvWindow:
             None
         """
         self.root = root
-        # self.root.title("Mass spec sample list")
 
         self.operator = str(os.environ.get("OPERATOR"))
         self.ms_id = str(os.environ.get("MS_ID"))
@@ -438,6 +439,7 @@ class CsvWindow:
         self.csv_path = csv_path
         self.current_position = 1
         self.current_row = 1
+        self.timestamp = datetime.now().strftime("%Y%m%d%H%M")
 
         # Create Treeview widget
         self.tree = ttk.Treeview(
@@ -509,7 +511,7 @@ class CsvWindow:
         file = parts[-1]
 
         # Placeholder calculations for other columns
-        filename = datetime.now().strftime("%Y%m%d") + "_" + str(self.operator) + "_" + aliquot_id + "_" + file
+        filename = self.timestamp + "_" + str(self.operator) + "_" + aliquot_id + "_" + file
         path = self.data_path.replace("/", "\\")
         instrument_method = self.method_file.replace("/", "\\")
         inj_volume = self.inj_volume
@@ -620,13 +622,7 @@ class CsvWindow:
                 for i in range(1, self.pre_blk + 1):
                     padded_number = str(i).zfill(2)
                     filename = (
-                        datetime.now().strftime("%Y%m%d")
-                        + "_"
-                        + self.operator
-                        + "_dbgi_"
-                        + self.blk_name
-                        + "_blk_pre"
-                        + padded_number
+                        self.timestamp + "_" + self.operator + "_dbgi_" + self.blk_name + "_blk_pre" + padded_number
                     )
                     path = self.data_path.replace("/", "\\")
                     instrument_method = self.method_file.replace("/", "\\")
@@ -644,13 +640,7 @@ class CsvWindow:
                 for i in range(1, self.post_blk + 1):
                     padded_number = str(i).zfill(2)
                     filename = (
-                        datetime.now().strftime("%Y%m%d")
-                        + "_"
-                        + self.operator
-                        + "_dbgi_"
-                        + self.blk_name
-                        + "_blk_post"
-                        + padded_number
+                        self.timestamp + "_" + self.operator + "_dbgi_" + self.blk_name + "_blk_post" + padded_number
                     )
                     path = self.data_path.replace("/", "\\")
                     instrument_method = self.method_file.replace("/", "\\")
@@ -663,7 +653,7 @@ class CsvWindow:
             # Write standby line
             parts = self.standby_file.split("/")
             file = parts[-1]
-            filename = datetime.now().strftime("%Y%m%d") + "_" + self.operator + "_" + file
+            filename = self.timestamp + "_" + self.operator + "_" + file
             path = self.data_path.replace("/", "\\")
             standby = self.standby_file.replace("/", "\\")
             position = self.blk_pos

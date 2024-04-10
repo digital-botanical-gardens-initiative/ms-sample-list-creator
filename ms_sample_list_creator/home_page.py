@@ -9,9 +9,9 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog
 from typing import Any
-import new_batch
-import csv_batch
 
+import csv_batch
+import new_batch
 import requests
 
 
@@ -30,6 +30,9 @@ class HomeWindow(tk.Frame):
         """
 
         tk.Frame.__init__(self, parent, *args, **kwargs)
+
+        # Bind the destroy event to the callback function
+        #window.protocol("WM_DELETE_WINDOW", self.destroy_window)
 
         # Create a variable to store the entered text
         self.username = tk.StringVar(None)
@@ -108,8 +111,7 @@ class HomeWindow(tk.Frame):
         label_pre_blk = tk.Label(frame_labels_blk, text="Blanks before samples:")
         label_pre_blk.pack(side="left", padx=4, anchor="center")
 
-        label_post_blk = tk.Label(frame_labels_blk, 
-        text="Blanks after samples:")
+        label_post_blk = tk.Label(frame_labels_blk, text="Blanks after samples:")
         label_post_blk.pack(side="right", padx=(0, 8), anchor="center")
 
         frame_entries_blk = tk.Frame(self)
@@ -195,11 +197,27 @@ class HomeWindow(tk.Frame):
         frame_submit = tk.Frame(self)
         frame_submit.pack(pady=(50, 0))
 
-        button_new_batch = tk.Button(frame_submit, text="New sample list", width=20, command=lambda: self.show_values(clicked_button="new"))
+        button_new_batch = tk.Button(
+            frame_submit, text="New sample list", width=20, command=lambda: self.show_values(clicked_button="new")
+        )
         button_new_batch.pack(side="left")
 
-        button_submit_csv = tk.Button(frame_submit, text="Sample list from CSV", width=20, command=lambda: self.show_values(clicked_button="csv"))
+        button_submit_csv = tk.Button(
+            frame_submit, text="Sample list from CSV", width=20, command=lambda: self.show_values(clicked_button="csv")
+        )
         button_submit_csv.pack(side="right")
+
+    def destroy_window(self) -> None:
+        """
+        Destroys the window when close button is pressed.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        window.destroy()
 
     def method_file(self) -> None:
         """
@@ -443,22 +461,24 @@ class HomeWindow(tk.Frame):
         """
         # Hide the main page
         self.pack_forget()
-        #window.destroy()
+        # window.destroy()
 
         operator = os.environ.get("OPERATOR")
         output_folder = os.environ.get("OUTPUT_FOLDER")
 
-        #window3 = tk.Tk()
+        # window3 = tk.Tk()
 
-        
-        #csvBatch(
+        # csvBatch(
         #    root=window3,
         #    csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv",
-        #)
+        # )
 
         # Hide the main page and open Window 1
-        #self.pack_forget()
-        csvWindow = csv_batch.csvBatch(parent=self.master, csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv")
+        # self.pack_forget()
+        csvWindow = csv_batch.csvBatch(
+            parent=self.master,
+            csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv",
+        )
         csvWindow.title("CSV import")
         csvWindow.pack()
 
@@ -473,6 +493,7 @@ class HomeWindow(tk.Frame):
             None
         """
         window.deiconify()
+
 
 # Create the main window
 window = tk.Tk()

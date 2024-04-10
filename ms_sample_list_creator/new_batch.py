@@ -1,11 +1,12 @@
-import tkinter as tk
+import csv
 import os
+import tkinter as tk
+from datetime import datetime
 from tkinter import ttk
 from typing import Any, Optional
-import csv
-from datetime import datetime
 
 import requests
+
 
 class newBatch:
     def __init__(self, root: tk.Tk, csv_path: str):
@@ -95,10 +96,10 @@ class newBatch:
 
     def back_to_main(self):
         import home_page
+
         # Destroy Window 2 and show the main page
         home_page.HomeWindow.deiconify(self)
         self.root.destroy()
-        
 
     def add_row(self, event: Optional[tk.Event] = None) -> None:
         """

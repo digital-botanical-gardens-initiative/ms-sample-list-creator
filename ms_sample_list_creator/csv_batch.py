@@ -1,9 +1,10 @@
-
-import tkinter as tk
 import os
+import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog
-import home_page   
+
+import home_page
+
 
 class csvBatch(tk.Frame):
     def __init__(self, csv_path, parent, *args, **kwargs):
@@ -53,7 +54,7 @@ class csvBatch(tk.Frame):
         button_back.pack()
 
     def import_csv(self):
-        os.environ['file_path'] = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+        os.environ["file_path"] = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
     def show_values(self):
         print("correctly written")

@@ -32,7 +32,7 @@ class HomeWindow(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
 
         # Bind the destroy event to the callback function
-        #window.protocol("WM_DELETE_WINDOW", self.destroy_window)
+        # window.protocol("WM_DELETE_WINDOW", self.destroy_window)
 
         # Create a variable to store the entered text
         self.username = tk.StringVar(None)

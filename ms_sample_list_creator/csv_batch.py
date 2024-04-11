@@ -54,7 +54,7 @@ class csvBatch(tk.Frame):
         button_back.pack()
 
     def import_csv(self):
-        os.environ["file_path"] = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+        os.environ["FILE_PATH"] = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
     def show_values(self):
         print("correctly written")

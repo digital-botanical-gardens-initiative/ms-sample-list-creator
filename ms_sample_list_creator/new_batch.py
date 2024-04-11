@@ -9,7 +9,7 @@ import requests
 
 
 class newBatch:
-    def __init__(self, root: tk.Tk, csv_path: str):
+    def __init__(self, new_batch_window, root):
         """
         Initializes an instance of the class.
 
@@ -20,12 +20,14 @@ class newBatch:
         Returns:
             None
         """
-        print("new batch")
 
+        self.new_batch_window = new_batch_window
         self.root = root
 
-        # Bind the destroy event to the callback function
-        self.root.protocol("WM_DELETE_WINDOW", self.back_to_main)
+        # Make CsvWindow wait for AskBoxPrefixWindow result
+        self.root.withdraw()
+
+        self.new_batch_window.protocol("WM_DELETE_WINDOW", self.on_exit)
 
         self.operator = str(os.environ.get("OPERATOR"))
         self.ms_id = str(os.environ.get("MS_ID"))
@@ -40,14 +42,16 @@ class newBatch:
         self.method_file = str(os.environ.get("METHOD_FILE"))
         self.data_path = str(os.environ.get("DATA_FOLDER"))
         self.standby_file = str(os.environ.get("STANDBY_FILE"))
-        self.csv_path = csv_path
+        self.output_folder = str(os.environ.get("OUTPUT_FOLDER"))
+        self.file = str(os.environ.get("FILE"))
+        self.csv_path = f"{self.output_folder}/{datetime.now().strftime('%Y%m%d')}_{self.operator}_dbgi_{self.file}.csv"
         self.current_position = 1
         self.current_row = 1
         self.timestamp = datetime.now().strftime("%Y%m%d%H%M")
 
         # Create Treeview widget
         self.tree = ttk.Treeview(
-            root,
+            self.new_batch_window,
             columns=(
                 "aliquot_id",
                 "operator",
@@ -71,19 +75,20 @@ class newBatch:
         self.tree.heading("Inj Vol", text="Inj Vol")
 
         # Bind Enter key to add row
-        self.root.bind("<Return>", self.add_row)
+        self.new_batch_window.bind("<Return>", self.add_row)
 
         # Entry widgets for data input
-        self.aliquot_id_entry = ttk.Entry(root)
+        self.aliquot_id_entry = ttk.Entry(self.new_batch_window)
 
         # Error text hidden:
-        self.label = ttk.Label(root, text="")
+        self.label = ttk.Label(self.new_batch_window, text="")
         self.label.grid(row=2, column=0, columnspan=2, pady=10)
 
         # Submit button
-        submit_button = ttk.Button(root, text="Generate sample list", width=17, command=self.submit_table)
+        submit_button = ttk.Button(self.new_batch_window, text="Generate sample list", width=20, command=self.submit_table)
 
-        button_back = tk.Button(root, text="Back to Home", width=17, command=self.back_to_main)
+        # Back button
+        button_back = tk.Button(self.new_batch_window, text="Back to Home", width=20, command=self.on_exit)
 
         # Grid layout for widgets
         self.tree.grid(row=0, column=0, padx=10, pady=10, columnspan=2)
@@ -92,14 +97,12 @@ class newBatch:
         button_back.grid(row=4, column=1, columnspan=2, pady=10)
 
         # Start the Tkinter event loop
-        self.root.mainloop()
+        self.new_batch_window.mainloop()
+        self.root.withdraw()
 
-    def back_to_main(self):
-        import home_page
-
-        # Destroy Window 2 and show the main page
-        home_page.HomeWindow.deiconify(self)
-        self.root.destroy()
+    def on_exit(self):
+        self.new_batch_window.destroy()
+        self.root.deiconify()
 
     def add_row(self, event: Optional[tk.Event] = None) -> None:
         """
@@ -157,13 +160,13 @@ class newBatch:
                 self.current_position == 1 and self.current_row == 1
             ):
                 # Open window to ask prefix
-                ask_prefix_window = tk.Toplevel(self.root)
+                ask_prefix_window = tk.Toplevel(self.new_batch_window)
                 ask_prefix_window.title("Add Prefix")
                 self.ask_box = AskBoxPrefixWindow(ask_prefix_window)
                 self.ask_box.pack()
 
                 # Make CsvWindow wait for AskBoxPrefixWindow result
-                ask_prefix_window.transient(self.root)
+                ask_prefix_window.transient(self.new_batch_window)
                 ask_prefix_window.wait_window(self.ask_box)
 
             prefix = os.environ.get("PREFIX")
@@ -275,6 +278,7 @@ class newBatch:
             csv_writer.writerow([filename, path, standby, position, inj_volume])
 
         # Close the Tkinter window
+        self.new_batch_window.destroy()
         self.root.destroy()
 
     def directus_reconnect(self) -> None:

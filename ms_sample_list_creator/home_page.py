@@ -1,38 +1,24 @@
-# To generate binaries for this script, install pyinstaller (pip install pyinstaller) and run "pyinstaller --onefile main.py"
-# Generated binaries are made for the native system where the pyinstaller command is run.
-
-# You can generate windows executable from linux using wine, by previously installing wine, python 3.8.19, pyinstaller and
-# other non-built-in packages (here requests) inside wine. Then run: wine pyinstaller --onefile main.py
-
 import os
 import tkinter as tk
-from datetime import datetime
 from tkinter import filedialog
-from typing import Any
 
-import csv_batch
-import new_batch
 import requests
 
 
 class HomeWindow(tk.Frame):
-    def __init__(self, parent: tk.Widget, *args: Any, **kwargs: Any):
+    def __init__(self, parent, *args, **kwargs):
         """
         Initializes an instance of the class.
 
         Args:
-            parent (tk.Widget): The parent widget or window where this frame will be placed.
-            *args: Additional positional arguments that may be passed to the parent class constructor (optional).
-            **kwargs: Additional keyword arguments that may be passed to the parent class constructor (optional).
+            root(tk.Tk): The parent widget or window where this frame will be placed.
+            csv_path(str): CSV path and name.
 
         Returns:
             None
         """
 
         tk.Frame.__init__(self, parent, *args, **kwargs)
-
-        # Bind the destroy event to the callback function
-        # window.protocol("WM_DELETE_WINDOW", self.destroy_window)
 
         # Create a variable to store the entered text
         self.username = tk.StringVar(None)
@@ -194,48 +180,6 @@ class HomeWindow(tk.Frame):
         self.output_path_button = tk.Button(frame_entry_output, text="output", width=17, command=self.output_folder)
         self.output_path_button.pack(side="right", padx=(0, 1), anchor="center")
 
-        frame_submit = tk.Frame(self)
-        frame_submit.pack(pady=(50, 0))
-
-        button_new_batch = tk.Button(
-            frame_submit, text="New sample list", width=20, command=lambda: self.show_values(clicked_button="new")
-        )
-        button_new_batch.pack(side="left")
-
-        button_submit_csv = tk.Button(
-            frame_submit, text="Sample list from CSV", width=20, command=lambda: self.show_values(clicked_button="csv")
-        )
-        button_submit_csv.pack(side="right")
-
-    def destroy_window(self) -> None:
-        """
-        Destroys the window when close button is pressed.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        window.destroy()
-
-    def method_file(self) -> None:
-        """
-        Asks the user to choose the injection method file he wants to use.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        method_file = filedialog.askopenfilename(filetypes=[("methods", "*.meth")]).split(".")[0]
-        if method_file:
-            os.environ["METHOD_FILE"] = method_file
-            parts = method_file.split("/")
-            self.file = parts[-1]
-            self.method_path_button.config(text=self.file)
-
     def data_folder(self) -> None:
         """
         Asks the user to choose the data folder where MS data will be stored.
@@ -254,9 +198,9 @@ class HomeWindow(tk.Frame):
             folder = parts[-1]
             self.data_path_button.config(text=folder)
 
-    def output_folder(self) -> None:
+    def method_file(self) -> None:
         """
-        Asks the user to choose the output folder where CSV will be written.
+        Asks the user to choose the injection method file he wants to use.
 
         Args:
             None
@@ -264,12 +208,13 @@ class HomeWindow(tk.Frame):
         Returns:
             None
         """
-        output_folder = filedialog.askdirectory()
-        if output_folder:
-            os.environ["OUTPUT_FOLDER"] = output_folder
-            parts = output_folder.split("/")
-            folder = parts[-1]
-            self.output_path_button.config(text=folder)
+        method_file = filedialog.askopenfilename(filetypes=[("methods", "*.meth")]).split(".")[0]
+        if method_file:
+            os.environ["METHOD_FILE"] = method_file
+            parts = method_file.split("/")
+            self.file = parts[-1]
+            os.environ["FILE"] = self.file
+            self.method_path_button.config(text=self.file)
 
     def standby_file(self) -> None:
         """
@@ -287,6 +232,23 @@ class HomeWindow(tk.Frame):
             parts = standby_file.split("/")
             file = parts[-1]
             self.standby_path_button.config(text=file)
+
+    def output_folder(self) -> None:
+        """
+        Asks the user to choose the output folder where CSV will be written.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        output_folder = filedialog.askdirectory()
+        if output_folder:
+            os.environ["OUTPUT_FOLDER"] = output_folder
+            parts = output_folder.split("/")
+            folder = parts[-1]
+            self.output_path_button.config(text=folder)
 
     def show_values(self, clicked_button) -> None:
         """
@@ -410,7 +372,7 @@ class HomeWindow(tk.Frame):
 
     def manage_choice(self) -> None:
         """
-        Redirects the user to the correct next window (new batch or csv batch).
+        Returns to main script which option did the user choose.
 
         Args:
             None
@@ -419,93 +381,11 @@ class HomeWindow(tk.Frame):
             None
         """
         if self.clicked_button == "new":
-            self.open_new_batch()
+            self.label.config(text="Connect to directus and adjust the parameters", foreground="black")
+            return "new"
         elif self.clicked_button == "csv":
-            self.open_csv_batch()
+            self.label.config(text="Connect to directus and adjust the parameters", foreground="black")
+            return "csv"
         else:
-            print("unknown error, please try again.")
-
-    def open_new_batch(self) -> None:
-        """
-        Hides the main window and initializes the new batch sample list window.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        # Hide the main page
-        window.withdraw()
-
-        operator = os.environ.get("OPERATOR")
-
-        newWindow = tk.Tk()
-        newWindow.title("New batch")
-
-        output_folder = os.environ.get("OUTPUT_FOLDER")
-        new_batch.newBatch(
-            root=newWindow,
-            csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv",
-        )
-
-    def open_csv_batch(self) -> None:
-        """
-        Hides the main window and initializes the csv sample list window.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        # Hide the main page
-        self.pack_forget()
-        # window.destroy()
-
-        operator = os.environ.get("OPERATOR")
-        output_folder = os.environ.get("OUTPUT_FOLDER")
-
-        # window3 = tk.Tk()
-
-        # csvBatch(
-        #    root=window3,
-        #    csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv",
-        # )
-
-        # Hide the main page and open Window 1
-        # self.pack_forget()
-        csvWindow = csv_batch.csvBatch(
-            parent=self.master,
-            csv_path=f"{output_folder}/{datetime.now().strftime('%Y%m%d')}_{operator}_dbgi_{self.file}.csv",
-        )
-        csvWindow.title("CSV import")
-        csvWindow.pack()
-
-    def deiconify(self) -> None:
-        """
-        make the home page visible again. Called by external scripts.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        window.deiconify()
-
-
-# Create the main window
-window = tk.Tk()
-window.title("Home")
-window.minsize(600, 600)
-
-# Create a Frame within the Tk window
-window_frame = tk.Frame(window)
-# Pack the Frame to occupy the whole window
-window_frame.pack()
-# Pass window_frame as the parent
-main_page = HomeWindow(window_frame)
-# Pack the HomeWindow within the Frame
-main_page.pack()
-window.mainloop()
+            # If user didn't enter all necessary values, shows this message
+            self.label.config(text="Unknow error, please try again with other parameters", foreground="red")

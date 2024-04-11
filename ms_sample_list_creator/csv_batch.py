@@ -3,11 +3,8 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog
 
-import home_page
-
-
 class csvBatch(tk.Frame):
-    def __init__(self, csv_path, parent, *args, **kwargs):
+    def __init__(self, csv_batch_window, root):
         """
         Initializes an instance of the class.
 
@@ -18,11 +15,16 @@ class csvBatch(tk.Frame):
         Returns:
             None
         """
-        print("csv batch")
+        self.csv_batch_window = csv_batch_window
+        self.root = root
 
-        tk.Frame.__init__(self, csv_path, parent, *args, **kwargs)
+        # Make CsvWindow wait for AskBoxPrefixWindow result
+        self.root.withdraw()
+
+        self.csv_batch_window.protocol("WM_DELETE_WINDOW", self.on_exit)
 
         self.operator = str(os.environ.get("OPERATOR"))
+        self.output_folder = os.environ.get("OUTPUT_FOLDER")
         self.ms_id = str(os.environ.get("MS_ID"))
         self.col_rack_size = int(str(os.environ.get("COL_RACK_NUMBER")))
         self.row_rack_size = int(str(os.environ.get("ROW_RACK_NUMBER")))
@@ -35,31 +37,33 @@ class csvBatch(tk.Frame):
         self.method_file = str(os.environ.get("METHOD_FILE"))
         self.data_path = str(os.environ.get("DATA_FOLDER"))
         self.standby_file = str(os.environ.get("STANDBY_FILE"))
-        self.csv_path = csv_path
+        self.file = str(os.environ.get("FILE"))
         self.current_position = 1
         self.current_row = 1
         self.timestamp = datetime.now().strftime("%Y%m%d%H%M")
+        self.csv_path = f"{self.output_folder}/{datetime.now().strftime('%Y%m%d')}_{self.operator}_dbgi_{self.file}.csv"
 
-        # Create widgets for the main page
-        label = tk.Label(self, text="Search for your CSV:")
+        warning_label = tk.Label(self.csv_batch_window, text="Warning, this mode is exclusively made to submit sample lists that have already been made using this tool.")
+        warning_label.pack()
+
+        label = tk.Label(self.csv_batch_window, text="Search for your CSV:", pady=10)
         label.pack()
 
-        import_button = tk.Button(self, text="Import your CSV", width=17, command=self.import_csv)
+        import_button = tk.Button(self.csv_batch_window, text="Import your CSV", width=17, command=self.import_csv, pady=10)
         import_button.pack()
 
-        button_submit = tk.Button(self, text="Submit", command=self.show_values)
+        button_submit = tk.Button(self.csv_batch_window, text="Submit", width=17, command=self.show_values, pady=10)
         button_submit.pack()
 
-        button_back = tk.Button(self, text="Back to Main Page", command=self.back_to_main)
+        button_back = tk.Button(self.csv_batch_window, text="Go back to home", width=17, command=self.on_exit, pady=10)
         button_back.pack()
+
+    def on_exit(self):
+        self.csv_batch_window.destroy()
+        self.root.deiconify()
 
     def import_csv(self):
         os.environ["FILE_PATH"] = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
     def show_values(self):
         print("correctly written")
-
-    def back_to_main(self):
-        # Destroy Window 2 and show the main page
-        self.destroy()
-        home_page.HomeWindow.pack()

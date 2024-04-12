@@ -36,7 +36,7 @@ class newBatch:
         self.pre_blk = int(str(os.environ.get("PRE_BLK")))
         self.post_blk = int(str(os.environ.get("POST_BLK")))
         self.blk_name = str(os.environ.get("BLK_NAME"))
-        self.blk_pos = str(os.environ.get("LK_POS"))
+        self.blk_pos = str(os.environ.get("BLK_POS"))
         self.inj_volume = int(str(os.environ.get("INJ_VOLUME")))
         self.access_token = str(os.environ.get("ACCESS_TOKEN"))
         self.method_file = str(os.environ.get("METHOD_FILE"))
@@ -165,7 +165,7 @@ class newBatch:
 
         self.label.config(text="")
 
-        if response.status_code == 200:
+        if response.status_code != 200:
             # Check if it is the first run or not the first position in the rack
             if (self.current_position > self.col_rack_size and self.current_position > self.col_rack_size) or (
                 self.current_position == 1 and self.current_row == 1

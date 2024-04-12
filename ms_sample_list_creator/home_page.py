@@ -50,8 +50,10 @@ class HomeWindow(tk.Frame):
         frame_entries_up.pack(fill="x", pady=5)
 
         entry_username = tk.Entry(frame_entries_up, textvariable=self.username)
+        self.username.set("edouard.bruelhart@unifr.ch")
         entry_username.pack(side="left", anchor="center")
         entry_password = tk.Entry(frame_entries_up, textvariable=self.password, show="*")
+        self.password.set("861510Eb.98")
         entry_password.pack(side="right", anchor="center")
 
         frame_labels_om = tk.Frame(self)
@@ -67,9 +69,11 @@ class HomeWindow(tk.Frame):
         frame_entries_om.pack(fill="x", pady=(5, 0))
 
         entry_operator = tk.Entry(frame_entries_om, textvariable=self.operator)
+        self.operator.set("EB")
         entry_operator.pack(side="left", anchor="center")
 
         entry_ms = tk.Entry(frame_entries_om, textvariable=self.ms_id)
+        self.ms_id.set("ms_000001")
         entry_ms.pack(side="right", anchor="center")
 
         frame_label_rack = tk.Frame(self)

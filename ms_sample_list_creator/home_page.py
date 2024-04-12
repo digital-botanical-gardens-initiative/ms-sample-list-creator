@@ -1,12 +1,13 @@
 import os
 import tkinter as tk
 from tkinter import filedialog
+from typing import Any
 
 import requests
 
 
 class HomeWindow(tk.Frame):
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent: tk.Tk, *args: Any, **kwargs: Any):
         """
         Initializes an instance of the class.
 
@@ -250,12 +251,12 @@ class HomeWindow(tk.Frame):
             folder = parts[-1]
             self.output_path_button.config(text=folder)
 
-    def show_values(self, clicked_button) -> None:
+    def show_values(self, clicked_button: str) -> None:
         """
         Stores all the parameters to the environment when user confirms his choice.
 
         Args:
-            None
+            clicked_button(str): A string ("new" or "csv"), that defines which window will be launched after home page.
 
         Returns:
             None
@@ -370,7 +371,7 @@ class HomeWindow(tk.Frame):
             # If user didn't enter all necessary values, shows this message
             self.label.config(text="Please provide all asked values", foreground="red")
 
-    def manage_choice(self) -> None:
+    def manage_choice(self) -> str:
         """
         Returns to main script which option did the user choose.
 
@@ -389,3 +390,4 @@ class HomeWindow(tk.Frame):
         else:
             # If user didn't enter all necessary values, shows this message
             self.label.config(text="Unknow error, please try again with other parameters", foreground="red")
+            return "error"

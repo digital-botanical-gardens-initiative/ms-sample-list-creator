@@ -5,22 +5,53 @@
 # other non-built-in packages (here requests) inside wine. Then run: wine pyinstaller --onefile main.py
 
 import tkinter as tk
-from home_page import HomeWindow
-from new_batch import newBatch
-from csv_batch import csvBatch
 
-def submit_results(clicked_button:str):
+from csv_batch import csvBatch  # type: ignore[import-not-found]
+from home_page import HomeWindow  # type: ignore[import-not-found]
+from new_batch import newBatch  # type: ignore[import-not-found]
+
+
+def submit_results(clicked_button: str) -> None:
+    """
+    Permits to detect the button the user clicked.
+
+    Args:
+        clicked_button (str): string parameter to define which button is clicked.
+
+    Returns:
+        None
+    """
     home_page.show_values(clicked_button)
     handle_user_choice()
 
+
 # Function to handle the user choice
-def handle_user_choice():
+def handle_user_choice() -> None:
+    """
+    Collect user choice and transmits it to de function that shows the correct window.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     # Call the manage_choice method to get the user choice
     user_choice = home_page.manage_choice()
     # Show the corresponding window based on the user's choice
     show_selected_window(user_choice)
 
-def show_selected_window(choice):
+
+def show_selected_window(choice: str) -> None:
+    """
+    Accepts user choice and launches the correct window.
+
+    Args:
+        choice (str): Retrieves the user choice.
+
+    Returns:
+        None
+    """
     if choice == "new":
         # Create a new Toplevel window for the new batch
         new_batch_window = tk.Toplevel(root)
@@ -38,6 +69,7 @@ def show_selected_window(choice):
         # Handle the case of an unknown choice
         print("Unknown error, please try again with other parameters.")
 
+
 # Create an instance of the main window
 root = tk.Tk()
 root.title("Home")
@@ -52,14 +84,13 @@ home_page.pack()
 frame_submit = tk.Frame(root)
 frame_submit.pack(pady=(50, 0))
 
-button_new_batch = tk.Button(
-frame_submit, text="New sample list", width=20, command=lambda: submit_results("new"))
+button_new_batch = tk.Button(frame_submit, text="New sample list", width=20, command=lambda: submit_results("new"))
 button_new_batch.pack(side="left")
 
 button_submit_csv = tk.Button(
-frame_submit, text="Sample list from CSV", width=20, command=lambda: submit_results("csv"))
+    frame_submit, text="Sample list from CSV", width=20, command=lambda: submit_results("csv")
+)
 button_submit_csv.pack(side="right")
 
 # Start the tkinter event loop
 root.mainloop()
-

@@ -9,13 +9,13 @@ import requests
 
 
 class newBatch:
-    def __init__(self, new_batch_window, root):
+    def __init__(self, new_batch_window: tk.Toplevel, root: tk.Tk):
         """
         Initializes an instance of the class.
 
         Args:
-            root(tk.Tk): The parent widget or window where this frame will be placed.
-            csv_path(str): CSV path and name.
+            new_batch_window(tk.Toplevel): The parent widget where this frame will be placed.
+            root(tk.Tk): The root window to perform actions on it.
 
         Returns:
             None
@@ -85,7 +85,9 @@ class newBatch:
         self.label.grid(row=2, column=0, columnspan=2, pady=10)
 
         # Submit button
-        submit_button = ttk.Button(self.new_batch_window, text="Generate sample list", width=20, command=self.submit_table)
+        submit_button = ttk.Button(
+            self.new_batch_window, text="Generate sample list", width=20, command=self.submit_table
+        )
 
         # Back button
         button_back = tk.Button(self.new_batch_window, text="Back to Home", width=20, command=self.on_exit)
@@ -100,7 +102,16 @@ class newBatch:
         self.new_batch_window.mainloop()
         self.root.withdraw()
 
-    def on_exit(self):
+    def on_exit(self) -> None:
+        """
+        Defines behaviour when user quits this window (by x button or specified button).
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.new_batch_window.destroy()
         self.root.deiconify()
 

@@ -6,9 +6,9 @@
 
 import tkinter as tk
 
-from csv_batch import csvBatch  # type: ignore[import-not-found]
-from home_page import HomeWindow  # type: ignore[import-not-found]
-from new_batch import newBatch  # type: ignore[import-not-found]
+import home_page  # type: ignore[import-not-found]
+import csv_batch  # type: ignore[import-not-found]
+import new_batch  # type: ignore[import-not-found]
 
 
 def submit_results(clicked_button: str) -> None:
@@ -29,7 +29,6 @@ def submit_results(clicked_button: str) -> None:
 def handle_user_choice() -> None:
     """
     Collect user choice and transmits it to de function that shows the correct window.
-    ;C:\users\edouard\Local Settings\Application Data\Programs\Python\Python38\Scripts
 
     Args:
         None
@@ -49,14 +48,14 @@ def show_selected_window(choice: str) -> None:
         new_batch_window = tk.Toplevel(root)
         new_batch_window.title("Create new batch")
         # Show the window for a new batch
-        newBatch(new_batch_window, root)
+        new_batch.newBatch(new_batch_window, root)
     elif choice == "csv":
         # Create a new Toplevel window for the new batch
         csv_batch_window = tk.Toplevel(root)
         csv_batch_window.minsize(300, 200)
         csv_batch_window.title("Import csv batch")
         # Show the window for a new batch
-        csvBatch(csv_batch_window, root)
+        csv_batch.csvBatch(csv_batch_window, root)
     else:
         # Handle the case of an unknown choice
         print("Unknown error, please try again with other parameters.")
@@ -68,7 +67,7 @@ root.title("Home")
 root.minsize(600, 600)
 
 # Create an instance of the HomeWindow class
-home_page = HomeWindow(root)
+home_page = home_page.HomeWindow(root)
 
 # Display the HomeWindow
 home_page.pack()

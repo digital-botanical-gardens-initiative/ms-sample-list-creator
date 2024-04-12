@@ -45,7 +45,7 @@ class csvBatch(tk.Frame):
         self.file = str(os.environ.get("FILE"))
         self.current_position = 1
         self.current_row = 1
-        self.timestamp = "202404101527"#datetime.now().strftime("%Y%m%d%H%M")
+        self.timestamp = "202404101527"  # datetime.now().strftime("%Y%m%d%H%M")
         self.csv_path = f"{self.output_folder}/{datetime.now().strftime('%Y%m%d')}_{self.operator}_dbgi_{self.file}.csv"
 
         self.warning_label = tk.Label(

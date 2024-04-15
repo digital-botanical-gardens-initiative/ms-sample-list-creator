@@ -4,12 +4,12 @@
 # You can generate windows executable from linux using wine, by previously installing wine, python 3.8.19, pyinstaller and
 # other non-built-in packages (here requests and pandas) inside wine. Then run: wine pyinstaller --onefile ms_sample_list_creator.py
 
+import csv
 import os
 import tkinter as tk
+from datetime import datetime
 from tkinter import filedialog, ttk
 from typing import Any, Optional
-from datetime import datetime
-import csv
 
 import pandas as pd
 import requests
@@ -197,7 +197,9 @@ class HomeWindow(tk.Frame):
         frame_submit = tk.Frame(self)
         frame_submit.pack(pady=(50, 0))
 
-        button_new_batch = tk.Button(frame_submit, text="New sample list", width=20, command=lambda: self.show_values("new"))
+        button_new_batch = tk.Button(
+            frame_submit, text="New sample list", width=20, command=lambda: self.show_values("new")
+        )
         button_new_batch.pack(side="left")
 
         button_submit_csv = tk.Button(
@@ -423,6 +425,7 @@ class HomeWindow(tk.Frame):
         else:
             # If user didn't enter all necessary values, shows this message
             self.label.config(text="Unknow error, please try again with other parameters", foreground="red")
+
 
 class newBatch:
     def __init__(self, new_batch_window: tk.Toplevel, root: tk.Tk):
@@ -809,6 +812,7 @@ class AskBoxPrefixWindow(tk.Frame):
         # Close the AskBoxPrefixWindow
         self.master.destroy()
 
+
 class csvBatch(tk.Frame):
     def __init__(self, csv_batch_window: tk.Toplevel, root: tk.Tk):
         """
@@ -846,7 +850,7 @@ class csvBatch(tk.Frame):
         self.file = str(os.environ.get("FILE"))
         self.current_position = 1
         self.current_row = 1
-        self.timestamp = "202404101527"  # datetime.now().strftime("%Y%m%d%H%M")
+        self.timestamp = datetime.now().strftime("%Y%m%d%H%M")
         self.csv_path = f"{self.output_folder}/{datetime.now().strftime('%Y%m%d')}_{self.operator}_dbgi_{self.file}.csv"
 
         self.warning_label = tk.Label(
@@ -858,10 +862,10 @@ class csvBatch(tk.Frame):
         label = tk.Label(self.csv_batch_window, text="Search for your CSV:", pady=10)
         label.pack()
 
-        import_button = tk.Button(
+        self.import_button = tk.Button(
             self.csv_batch_window, text="Import your CSV", width=17, command=self.import_csv, pady=10
         )
-        import_button.pack()
+        self.import_button.pack()
 
         button_submit = tk.Button(self.csv_batch_window, text="Submit", width=17, command=self.submit_result, pady=10)
         button_submit.pack()
@@ -892,7 +896,11 @@ class csvBatch(tk.Frame):
         Returns:
             None
         """
-        os.environ["FILE_PATH"] = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+        csv_file = os.environ["FILE_PATH"] = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+        if csv_file:
+            parts = csv_file.split("/")
+            file = parts[-1]
+            self.import_button.config(text=file)
 
     def submit_result(self) -> None:
         """
@@ -912,7 +920,7 @@ class csvBatch(tk.Frame):
         df = pd.read_csv(str(file_path), skiprows=1)
 
         # Keep only the necessary columns in order to not generate a corrupted CSV
-        columns_filter = ['File Name', 'Path', 'Instrument Method', 'Position', 'Inj Vol']
+        columns_filter = ["File Name", "Path", "Instrument Method", "Position", "Inj Vol"]
         df = df.loc[:, columns_filter]
 
         # Delete standby row
@@ -959,7 +967,7 @@ class csvBatch(tk.Frame):
         response = session.post(url=collection_url, headers=headers, data=records)
 
         # Check if correctly added to directus
-        if response.status_code != 200:
+        if response.status_code == 200:
             self.warning_label.config(text="Success!! Writing CSV...", foreground="green")
             # Write data to the CSV file
             with open(self.csv_path, "w", newline="") as csv_file:
@@ -1022,6 +1030,7 @@ class csvBatch(tk.Frame):
             self.root.destroy()
         else:
             self.warning_label.config(text="Directus error, please check your CSV.", foreground="red")
+
 
 # Create an instance of the main window
 root = tk.Tk()

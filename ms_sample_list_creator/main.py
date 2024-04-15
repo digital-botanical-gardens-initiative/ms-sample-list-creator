@@ -911,6 +911,10 @@ class csvBatch(tk.Frame):
         # Converts the CSV to a dataframe
         df = pd.read_csv(str(file_path), skiprows=1)
 
+        # Keep only the necessary columns in order to not generate a corrupted CSV
+        columns_filter = ['File Name', 'Path', 'Instrument Method', 'Position', 'Inj Vol']
+        df = df.loc[:, columns_filter]
+
         # Delete standby row
         df = df.drop(df.index[-1])
 
@@ -955,7 +959,7 @@ class csvBatch(tk.Frame):
         response = session.post(url=collection_url, headers=headers, data=records)
 
         # Check if correctly added to directus
-        if response.status_code == 200:
+        if response.status_code != 200:
             self.warning_label.config(text="Success!! Writing CSV...", foreground="green")
             # Write data to the CSV file
             with open(self.csv_path, "w", newline="") as csv_file:

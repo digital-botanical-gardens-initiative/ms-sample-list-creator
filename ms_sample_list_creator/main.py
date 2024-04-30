@@ -59,11 +59,12 @@ class HomeWindow(tk.Frame):
         frame_entries_up.pack(fill="x", pady=5)
 
         entry_username = tk.Entry(frame_entries_up, textvariable=self.username)
-        self.username.set("edouard.bruelhart@unifr.ch")
         entry_username.pack(side="left", anchor="center")
         entry_password = tk.Entry(frame_entries_up, textvariable=self.password, show="*")
-        self.password.set("861510Eb.98")
         entry_password.pack(side="right", anchor="center")
+
+        # set the cursor to the prefix entry
+        entry_username.focus_set()
 
         frame_labels_om = tk.Frame(self)
         frame_labels_om.pack(fill="x", pady=(5, 0))
@@ -78,11 +79,9 @@ class HomeWindow(tk.Frame):
         frame_entries_om.pack(fill="x", pady=(5, 0))
 
         entry_operator = tk.Entry(frame_entries_om, textvariable=self.operator)
-        self.operator.set("EB")
         entry_operator.pack(side="left", anchor="center")
 
         entry_ms = tk.Entry(frame_entries_om, textvariable=self.ms_id)
-        self.ms_id.set("ms_000001")
         entry_ms.pack(side="right", anchor="center")
 
         frame_label_rack = tk.Frame(self)
@@ -138,11 +137,9 @@ class HomeWindow(tk.Frame):
         frame_entries_np.pack(fill="x", pady=(5, 0))
 
         entry_blk_name = tk.Entry(frame_entries_np, textvariable=self.blk_name)
-        self.blk_name.set("mapp")
         entry_blk_name.pack(side="left", anchor="center")
 
         entry_blk_pos = tk.Entry(frame_entries_np, textvariable=self.blk_pos)
-        self.blk_pos.set("B:F1")
         entry_blk_pos.pack(side="right", anchor="center")
 
         frame_labels_pv = tk.Frame(self)
@@ -791,7 +788,11 @@ class AskBoxPrefixWindow(tk.Frame):
         label_prefix.pack()
 
         entry_prefix = tk.Entry(self, textvariable=self.prefix)
+        self.prefix.set("G:")
         entry_prefix.pack()
+
+        # set the cursor to the prefix entry
+        entry_prefix.focus_set()
 
         # Submit button
         button_submit = tk.Button(self, text="Submit", command=self.store_prefix)

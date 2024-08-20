@@ -7,6 +7,7 @@
 import csv
 import os
 import tkinter as tk
+import webbrowser
 from datetime import datetime
 from tkinter import filedialog, ttk
 from typing import Any, Optional
@@ -43,166 +44,189 @@ class HomeWindow(tk.Frame):
         self.blk_pos = tk.StringVar(None)
         self.inj_volume = tk.IntVar(None)
 
-        self.label = tk.Label(self, text="Connect to directus and adjust the parameters")
-        self.label.pack()
-
-        # Create text entry fields
-        frame_labels_up = tk.Frame(self)
-        frame_labels_up.pack(fill="x", pady=(5, 0))
-
-        label_username = tk.Label(frame_labels_up, text="Directus username:")
-        label_username.pack(side="left", padx=15, anchor="center")
-        label_password = tk.Label(frame_labels_up, text="Directus password:")
-        label_password.pack(side="right", padx=(0, 20), anchor="center")
-
-        frame_entries_up = tk.Frame(self)
-        frame_entries_up.pack(fill="x", pady=5)
-
-        entry_username = tk.Entry(frame_entries_up, textvariable=self.username)
-        entry_username.pack(side="left", anchor="center")
-        entry_password = tk.Entry(frame_entries_up, textvariable=self.password, show="*")
-        entry_password.pack(side="right", anchor="center")
-
-        # set the cursor to the prefix entry
-        entry_username.focus_set()
-
-        frame_labels_om = tk.Frame(self)
-        frame_labels_om.pack(fill="x", pady=(5, 0))
-
-        label_operator = tk.Label(frame_labels_om, text="Operator's initials:")
-        label_operator.pack(side="left", padx=18, anchor="center")
-
-        label_ms = tk.Label(frame_labels_om, text="Mass spectrometer ID:")
-        label_ms.pack(side="right", padx=(0, 7), anchor="center")
-
-        frame_entries_om = tk.Frame(self)
-        frame_entries_om.pack(fill="x", pady=(5, 0))
-
-        entry_operator = tk.Entry(frame_entries_om, textvariable=self.operator)
-        entry_operator.pack(side="left", anchor="center")
-
-        entry_ms = tk.Entry(frame_entries_om, textvariable=self.ms_id)
-        entry_ms.pack(side="right", anchor="center")
-
-        frame_label_rack = tk.Frame(self)
-        frame_label_rack.pack(fill="x", pady=(5, 0))
-
-        label_col_rack_number = tk.Label(frame_label_rack, text="Rack size (columns x rows)")
-        label_col_rack_number.pack(side="bottom", anchor="center")
-
-        frame_entries_rack = tk.Frame(self)
-        frame_entries_rack.pack(fill="x", pady=(5, 0))
-
-        entry_col_rack_number = tk.Entry(frame_entries_rack, textvariable=self.col_rack_number)
-        self.col_rack_number.set(9)
-        entry_col_rack_number.pack(side="left", anchor="center")
-
-        label_x = tk.Label(frame_entries_rack, text="x")
-        label_x.pack(side="left", padx=40, anchor="center")
-
-        entry_row_rack_number = tk.Entry(frame_entries_rack, textvariable=self.row_rack_number)
-        self.row_rack_number.set(6)
-        entry_row_rack_number.pack(side="right", anchor="center")
-
-        frame_labels_blk = tk.Frame(self)
-        frame_labels_blk.pack(fill="x", pady=(5, 0))
-
-        label_pre_blk = tk.Label(frame_labels_blk, text="Blanks before samples:")
-        label_pre_blk.pack(side="left", padx=4, anchor="center")
-
-        label_post_blk = tk.Label(frame_labels_blk, text="Blanks after samples:")
-        label_post_blk.pack(side="right", padx=(0, 8), anchor="center")
-
-        frame_entries_blk = tk.Frame(self)
-        frame_entries_blk.pack(fill="x", pady=(5, 0))
-
-        entry_pre_blk = tk.Entry(frame_entries_blk, textvariable=self.pre_blk)
-        self.pre_blk.set(4)
-        entry_pre_blk.pack(side="left", anchor="center")
-
-        entry_post_blk = tk.Entry(frame_entries_blk, textvariable=self.post_blk)
-        self.post_blk.set(3)
-        entry_post_blk.pack(side="right", anchor="center")
-
-        frame_labels_np = tk.Frame(self)
-        frame_labels_np.pack(fill="x", pady=(5, 0))
-
-        label_blk_name = tk.Label(frame_labels_np, text="Blank name:")
-        label_blk_name.pack(side="left", padx=40, anchor="center")
-
-        label_blk_pos = tk.Label(frame_labels_np, text="Blank position:")
-        label_blk_pos.pack(side="right", padx=(0, 30), anchor="center")
-
-        frame_entries_np = tk.Frame(self)
-        frame_entries_np.pack(fill="x", pady=(5, 0))
-
-        entry_blk_name = tk.Entry(frame_entries_np, textvariable=self.blk_name)
-        entry_blk_name.pack(side="left", anchor="center")
-
-        entry_blk_pos = tk.Entry(frame_entries_np, textvariable=self.blk_pos)
-        entry_blk_pos.pack(side="right", anchor="center")
-
-        frame_labels_pv = tk.Frame(self)
-        frame_labels_pv.pack(fill="x", pady=(5, 0))
-
-        label_inj_volume = tk.Label(frame_labels_pv, text="Injection volume (µL):")
-        label_inj_volume.pack(side="left", anchor="center", padx=5)
-
-        label_data_path = tk.Label(frame_labels_pv, text="MS data directory")
-        label_data_path.pack(side="right", padx=(0, 25), anchor="center")
-
-        frame_entries_pv = tk.Frame(self)
-        frame_entries_pv.pack(fill="x", pady=(5, 0))
-
-        entry_inj_volume = tk.Entry(frame_entries_pv, textvariable=self.inj_volume)
-        self.inj_volume.set(2)
-        entry_inj_volume.pack(side="left")
-
-        self.data_path_button = tk.Button(frame_entries_pv, text="output", width=17, command=self.data_folder)
-        self.data_path_button.pack(side="right", padx=1, anchor="center")
-
-        frame_label_methods = tk.Frame(self)
-        frame_label_methods.pack(fill="x", pady=(5, 0))
-
-        label_method_path = tk.Label(frame_label_methods, text="Method file:")
-        label_method_path.pack(side="left", padx=40, anchor="center")
-
-        label_standby = tk.Label(frame_label_methods, text="Standby method file: ")
-        label_standby.pack(side="right", padx=(0, 10), anchor="center")
-
-        frame_entries_methods = tk.Frame(self)
-        frame_entries_methods.pack(fill="x", pady=(5, 0))
-
-        self.method_path_button = tk.Button(frame_entries_methods, text="method", width=17, command=self.method_file)
-        self.method_path_button.pack(side="left", padx=1, anchor="center")
-
-        self.standby_path_button = tk.Button(frame_entries_methods, text="method", width=17, command=self.standby_file)
-        self.standby_path_button.pack(side="right", anchor="center", padx=(0, 1))
-
-        frame_label_output = tk.Frame(self)
-        frame_label_output.pack(pady=(5, 0))
-
-        label_output_path = tk.Label(frame_label_output, text="Sample list output directory: ")
-        label_output_path.pack(side="right")
-
-        frame_entry_output = tk.Frame(self)
-        frame_entry_output.pack(pady=(5, 0))
-
-        self.output_path_button = tk.Button(frame_entry_output, text="output", width=17, command=self.output_folder)
-        self.output_path_button.pack(side="right", padx=(0, 1), anchor="center")
-
-        frame_submit = tk.Frame(self)
-        frame_submit.pack(pady=(50, 0))
-
-        button_new_batch = tk.Button(
-            frame_submit, text="New sample list", width=20, command=lambda: self.show_values("new")
+        # Send a request to github to know if this version is the las one
+        release_url = (
+            "https://api.github.com/repos/digital-botanical-gardens-initiative/ms-sample-list-creator/releases/latest"
         )
-        button_new_batch.pack(side="left")
+        session = requests.Session()
+        response = session.get(release_url)
+        data = response.json()["tag_name"]
+        tag = float(str.replace(data, "v.", ""))
 
-        button_submit_csv = tk.Button(
-            frame_submit, text="Sample list from CSV", width=20, command=lambda: self.show_values("csv")
-        )
-        button_submit_csv.pack(side="right")
+        if tag <= 0.7:
+            self.label = tk.Label(self, text="Connect to directus and adjust the parameters")
+            self.label.pack()
+
+            # Create text entry fields
+            frame_labels_up = tk.Frame(self)
+            frame_labels_up.pack(fill="x", pady=(5, 0))
+
+            label_username = tk.Label(frame_labels_up, text="Directus username:")
+            label_username.pack(side="left", padx=15, anchor="center")
+            label_password = tk.Label(frame_labels_up, text="Directus password:")
+            label_password.pack(side="right", padx=(0, 20), anchor="center")
+
+            frame_entries_up = tk.Frame(self)
+            frame_entries_up.pack(fill="x", pady=5)
+
+            entry_username = tk.Entry(frame_entries_up, textvariable=self.username)
+            entry_username.pack(side="left", anchor="center")
+            entry_password = tk.Entry(frame_entries_up, textvariable=self.password, show="*")
+            entry_password.pack(side="right", anchor="center")
+
+            # set the cursor to the prefix entry
+            entry_username.focus_set()
+
+            frame_labels_om = tk.Frame(self)
+            frame_labels_om.pack(fill="x", pady=(5, 0))
+
+            label_operator = tk.Label(frame_labels_om, text="Operator's initials:")
+            label_operator.pack(side="left", padx=18, anchor="center")
+
+            label_ms = tk.Label(frame_labels_om, text="Mass spectrometer ID:")
+            label_ms.pack(side="right", padx=(0, 7), anchor="center")
+
+            frame_entries_om = tk.Frame(self)
+            frame_entries_om.pack(fill="x", pady=(5, 0))
+
+            entry_operator = tk.Entry(frame_entries_om, textvariable=self.operator)
+            entry_operator.pack(side="left", anchor="center")
+
+            entry_ms = tk.Entry(frame_entries_om, textvariable=self.ms_id)
+            entry_ms.pack(side="right", anchor="center")
+
+            frame_label_rack = tk.Frame(self)
+            frame_label_rack.pack(fill="x", pady=(5, 0))
+
+            label_col_rack_number = tk.Label(frame_label_rack, text="Rack size (columns x rows)")
+            label_col_rack_number.pack(side="bottom", anchor="center")
+
+            frame_entries_rack = tk.Frame(self)
+            frame_entries_rack.pack(fill="x", pady=(5, 0))
+
+            entry_col_rack_number = tk.Entry(frame_entries_rack, textvariable=self.col_rack_number)
+            self.col_rack_number.set(9)
+            entry_col_rack_number.pack(side="left", anchor="center")
+
+            label_x = tk.Label(frame_entries_rack, text="x")
+            label_x.pack(side="left", padx=40, anchor="center")
+
+            entry_row_rack_number = tk.Entry(frame_entries_rack, textvariable=self.row_rack_number)
+            self.row_rack_number.set(6)
+            entry_row_rack_number.pack(side="right", anchor="center")
+
+            frame_labels_blk = tk.Frame(self)
+            frame_labels_blk.pack(fill="x", pady=(5, 0))
+
+            label_pre_blk = tk.Label(frame_labels_blk, text="Blanks before samples:")
+            label_pre_blk.pack(side="left", padx=4, anchor="center")
+
+            label_post_blk = tk.Label(frame_labels_blk, text="Blanks after samples:")
+            label_post_blk.pack(side="right", padx=(0, 8), anchor="center")
+
+            frame_entries_blk = tk.Frame(self)
+            frame_entries_blk.pack(fill="x", pady=(5, 0))
+
+            entry_pre_blk = tk.Entry(frame_entries_blk, textvariable=self.pre_blk)
+            self.pre_blk.set(4)
+            entry_pre_blk.pack(side="left", anchor="center")
+
+            entry_post_blk = tk.Entry(frame_entries_blk, textvariable=self.post_blk)
+            self.post_blk.set(3)
+            entry_post_blk.pack(side="right", anchor="center")
+
+            frame_labels_np = tk.Frame(self)
+            frame_labels_np.pack(fill="x", pady=(5, 0))
+
+            label_blk_name = tk.Label(frame_labels_np, text="Blank name:")
+            label_blk_name.pack(side="left", padx=40, anchor="center")
+
+            label_blk_pos = tk.Label(frame_labels_np, text="Blank position:")
+            label_blk_pos.pack(side="right", padx=(0, 30), anchor="center")
+
+            frame_entries_np = tk.Frame(self)
+            frame_entries_np.pack(fill="x", pady=(5, 0))
+
+            entry_blk_name = tk.Entry(frame_entries_np, textvariable=self.blk_name)
+            entry_blk_name.pack(side="left", anchor="center")
+
+            entry_blk_pos = tk.Entry(frame_entries_np, textvariable=self.blk_pos)
+            entry_blk_pos.pack(side="right", anchor="center")
+
+            frame_labels_pv = tk.Frame(self)
+            frame_labels_pv.pack(fill="x", pady=(5, 0))
+
+            label_inj_volume = tk.Label(frame_labels_pv, text="Injection volume (µL):")
+            label_inj_volume.pack(side="left", anchor="center", padx=5)
+
+            label_data_path = tk.Label(frame_labels_pv, text="MS data directory")
+            label_data_path.pack(side="right", padx=(0, 25), anchor="center")
+
+            frame_entries_pv = tk.Frame(self)
+            frame_entries_pv.pack(fill="x", pady=(5, 0))
+
+            entry_inj_volume = tk.Entry(frame_entries_pv, textvariable=self.inj_volume)
+            self.inj_volume.set(2)
+            entry_inj_volume.pack(side="left")
+
+            self.data_path_button = tk.Button(frame_entries_pv, text="output", width=17, command=self.data_folder)
+            self.data_path_button.pack(side="right", padx=1, anchor="center")
+
+            frame_label_methods = tk.Frame(self)
+            frame_label_methods.pack(fill="x", pady=(5, 0))
+
+            label_method_path = tk.Label(frame_label_methods, text="Method file:")
+            label_method_path.pack(side="left", padx=40, anchor="center")
+
+            label_standby = tk.Label(frame_label_methods, text="Standby method file: ")
+            label_standby.pack(side="right", padx=(0, 10), anchor="center")
+
+            frame_entries_methods = tk.Frame(self)
+            frame_entries_methods.pack(fill="x", pady=(5, 0))
+
+            self.method_path_button = tk.Button(
+                frame_entries_methods, text="method", width=17, command=self.method_file
+            )
+            self.method_path_button.pack(side="left", padx=1, anchor="center")
+
+            self.standby_path_button = tk.Button(
+                frame_entries_methods, text="method", width=17, command=self.standby_file
+            )
+            self.standby_path_button.pack(side="right", anchor="center", padx=(0, 1))
+
+            frame_label_output = tk.Frame(self)
+            frame_label_output.pack(pady=(5, 0))
+
+            label_output_path = tk.Label(frame_label_output, text="Sample list output directory: ")
+            label_output_path.pack(side="right")
+
+            frame_entry_output = tk.Frame(self)
+            frame_entry_output.pack(pady=(5, 0))
+
+            self.output_path_button = tk.Button(frame_entry_output, text="output", width=17, command=self.output_folder)
+            self.output_path_button.pack(side="right", padx=(0, 1), anchor="center")
+
+            frame_submit = tk.Frame(self)
+            frame_submit.pack(pady=(50, 0))
+
+            button_new_batch = tk.Button(
+                frame_submit, text="New sample list", width=20, command=lambda: self.show_values("new")
+            )
+            button_new_batch.pack(side="left")
+
+            button_submit_csv = tk.Button(
+                frame_submit, text="Sample list from CSV", width=20, command=lambda: self.show_values("csv")
+            )
+            button_submit_csv.pack(side="right")
+        else:
+            # Create GUI elements to ask user to download the latest version
+            label_labels = tk.Label(self, text="A new version is available, please download it.")
+            label_labels.pack()
+
+            button_new_labels = tk.Button(
+                self, text="Download latest version", width=40, command=self.download_last_version
+            )
+            button_new_labels.pack()
 
     def data_folder(self) -> None:
         """
@@ -422,6 +446,11 @@ class HomeWindow(tk.Frame):
         else:
             # If user didn't enter all necessary values, shows this message
             self.label.config(text="Unknow error, please try again with other parameters", foreground="red")
+
+    # Function that redirects user to the last software version
+    def download_last_version(self) -> None:
+        url = "https://github.com/digital-botanical-gardens-initiative/ms-sample-list-creator/releases/latest"
+        webbrowser.open(url)
 
 
 class newBatch:

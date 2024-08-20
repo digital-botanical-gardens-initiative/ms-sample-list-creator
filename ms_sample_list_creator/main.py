@@ -336,7 +336,7 @@ class HomeWindow(tk.Frame):
             and output_folder
         ):
             # Define the Directus base URL
-            base_url = "http://directus.dbgi.org"
+            base_url = "https://emi-collection.unifr.ch/directus"
 
             # Define the login endpoint URL
             login_url = base_url + "/auth/login"
@@ -353,7 +353,7 @@ class HomeWindow(tk.Frame):
 
                 # Test if the method is already present in directus
                 access_token = os.environ.get("ACCESS_TOKEN")
-                base_url = "http://directus.dbgi.org"
+                base_url = "https://emi-collection.unifr.ch/directus"
                 collection_url = base_url + f"/items/Injection_Methods/{self.file}"
                 session = requests.Session()
                 session.headers.update({"Authorization": f"Bearer {access_token}"})
@@ -367,7 +367,7 @@ class HomeWindow(tk.Frame):
                 # else adds the new method to directus
                 else:
                     # Send data to directus
-                    base_url = "http://directus.dbgi.org"
+                    base_url = "https://emi-collection.unifr.ch/directus"
                     collection_url = base_url + "/items/Injection_Methods"
                     session = requests.Session()
                     session.headers.update({"Authorization": f"Bearer {access_token}"})
@@ -561,7 +561,7 @@ class newBatch:
         inj_volume = self.inj_volume
 
         # Send data to directus
-        base_url = "http://directus.dbgi.org"
+        base_url = "https://emi-collection.unifr.ch/directus"
         collection_url = base_url + "/items/Mass_Spectrometry_Analysis"
         session = requests.Session()
         session.headers.update({"Authorization": f"Bearer {self.access_token}"})
@@ -723,7 +723,7 @@ class newBatch:
         password = os.environ.get("PASSWORD")
 
         # Define the Directus base URL
-        base_url = "http://directus.dbgi.org"
+        base_url = "https://emi-collection.unifr.ch/directus"
 
         # Define the login endpoint URL
         login_url = base_url + "/auth/login"
@@ -960,7 +960,7 @@ class csvBatch(tk.Frame):
 
         # Send data to directus
         records = directus_df.to_json(orient="records")
-        base_url = "http://directus.dbgi.org"
+        base_url = "https://emi-collection.unifr.ch/directus"
         collection_url = base_url + "/items/Mass_Spectrometry_Analysis"
         session = requests.Session()
         headers = {"Content-Type": "application/json"}

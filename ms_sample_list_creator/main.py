@@ -53,7 +53,7 @@ class HomeWindow(tk.Frame):
         data = response.json()["tag_name"]
         tag = float(str.replace(data, "v.", ""))
 
-        if tag <= 0.7:
+        if tag <= 1.0:
             self.label = tk.Label(self, text="Connect to directus and adjust the parameters")
             self.label.pack()
 
@@ -377,46 +377,52 @@ class HomeWindow(tk.Frame):
 
                 # Test if the method is already present in directus
                 access_token = os.environ.get("ACCESS_TOKEN")
-                base_url = "https://emi-collection.unifr.ch/directus"
-                collection_url = base_url + f"/items/Injection_Methods/{self.file}"
+                collection_url = base_url + "/items/Injection_Methods/"
+                params = {"filter[method_name][_eq]": self.file}
                 session = requests.Session()
                 session.headers.update({"Authorization": f"Bearer {access_token}"})
                 # collection_url = base_url + '/items/samples'
-                response = session.get(collection_url)
+                response = session.get(collection_url, params=params)
                 value = response.status_code
                 # if already present, launches the sample list window
                 if value == 200:
-                    # Hide the main page and open Window 2
-                    self.manage_choice()
-                # else adds the new method to directus
-                else:
-                    # Send data to directus
-                    base_url = "https://emi-collection.unifr.ch/directus"
-                    collection_url = base_url + "/items/Injection_Methods"
-                    session = requests.Session()
-                    session.headers.update({"Authorization": f"Bearer {access_token}"})
-
-                    # Add headers
-                    headers = {"Content-Type": "application/json"}
-
-                    data = {"method_name": self.file}
-
-                    response = session.post(url=collection_url, headers=headers, json=data)
-
-                    # if method is successfully added to directus, launchtes the sample list window
-                    if response.status_code == 200:
+                    data = str(response.json()["data"])
+                    if data == "[]":
+                        self.add_method(access_token, collection_url)
+                    else:
                         # Hide the main page and open Window 2
                         self.manage_choice()
+                else:
+                    self.label.config(text="Connexion to directus failed, please try again", foreground="red")
 
             # If connection to directus failed, informs the user that connection failed.
             else:
-                self.label.config(
-                    text="Connexion to directus failed, verify your credentials/vpn connection", foreground="red"
-                )
+                self.label.config(text="Connexion to directus failed, verify your credentials", foreground="red")
 
         else:
             # If user didn't enter all necessary values, shows this message
             self.label.config(text="Please provide all asked values", foreground="red")
+
+    def add_method(self, access_token: str, collection_url: str) -> None:
+        """
+        Adds an injection method to directus
+        """
+
+        # Send data to directus
+        session = requests.Session()
+        session.headers.update({"Authorization": f"Bearer {access_token}"})
+
+        # Add headers
+        headers = {"Content-Type": "application/json"}
+
+        data = {"method_name": self.file}
+
+        response = session.post(url=collection_url, headers=headers, json=data)
+
+        # if method is successfully added to directus, launchtes the sample list window
+        if response.status_code == 200:
+            # Hide the main page and open Window 2
+            self.manage_choice()
 
     def manage_choice(self) -> None:
         """
@@ -591,7 +597,7 @@ class newBatch:
 
         # Send data to directus
         base_url = "https://emi-collection.unifr.ch/directus"
-        collection_url = base_url + "/items/Mass_Spectrometry_Analysis"
+        collection_url = base_url + "/items/MS_Data"
         session = requests.Session()
         session.headers.update({"Authorization": f"Bearer {self.access_token}"})
 
@@ -599,10 +605,11 @@ class newBatch:
         headers = {"Content-Type": "application/json"}
 
         data = {
-            "aliquot_id": aliquot_id,
-            "mass_spec_id": filename,
-            "ms_id": self.ms_id,
+            "parent_sample_container": aliquot_id,
+            "filename": filename,
+            "instrument_used": self.ms_id,
             "injection_volume": inj_volume,
+            "injection_volume_unit": 18,
             "injection_method": file,
         }
 

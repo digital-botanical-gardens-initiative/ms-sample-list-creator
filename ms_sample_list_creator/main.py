@@ -10,7 +10,7 @@ import tkinter as tk
 import webbrowser
 from datetime import datetime
 from tkinter import filedialog, ttk
-from typing import Any, Optional
+from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 import requests
@@ -43,6 +43,7 @@ class HomeWindow(tk.Frame):
         self.blk_name = tk.StringVar(None)
         self.blk_pos = tk.StringVar(None)
         self.inj_volume = tk.IntVar(None)
+        self.batch_key = tk.IntVar(None)
 
         # Send a request to github to know if this version is the las one
         release_url = (
@@ -59,7 +60,7 @@ class HomeWindow(tk.Frame):
 
             # Create text entry fields
             frame_labels_up = tk.Frame(self)
-            frame_labels_up.pack(fill="x", pady=(5, 0))
+            frame_labels_up.pack(fill="x", pady=(7, 0))
 
             label_username = tk.Label(frame_labels_up, text="Directus username:")
             label_username.pack(side="left", padx=15, anchor="center")
@@ -67,7 +68,7 @@ class HomeWindow(tk.Frame):
             label_password.pack(side="right", padx=(0, 20), anchor="center")
 
             frame_entries_up = tk.Frame(self)
-            frame_entries_up.pack(fill="x", pady=5)
+            frame_entries_up.pack(fill="x", pady=2)
 
             entry_username = tk.Entry(frame_entries_up, textvariable=self.username)
             entry_username.pack(side="left", anchor="center")
@@ -78,7 +79,7 @@ class HomeWindow(tk.Frame):
             entry_username.focus_set()
 
             frame_labels_om = tk.Frame(self)
-            frame_labels_om.pack(fill="x", pady=(5, 0))
+            frame_labels_om.pack(fill="x", pady=(7, 0))
 
             label_operator = tk.Label(frame_labels_om, text="Operator's initials:")
             label_operator.pack(side="left", padx=18, anchor="center")
@@ -87,7 +88,7 @@ class HomeWindow(tk.Frame):
             label_ms.pack(side="right", padx=(0, 7), anchor="center")
 
             frame_entries_om = tk.Frame(self)
-            frame_entries_om.pack(fill="x", pady=(5, 0))
+            frame_entries_om.pack(fill="x", pady=(2, 0))
 
             entry_operator = tk.Entry(frame_entries_om, textvariable=self.operator)
             entry_operator.pack(side="left", anchor="center")
@@ -96,13 +97,13 @@ class HomeWindow(tk.Frame):
             entry_ms.pack(side="right", anchor="center")
 
             frame_label_rack = tk.Frame(self)
-            frame_label_rack.pack(fill="x", pady=(5, 0))
+            frame_label_rack.pack(fill="x", pady=(7, 0))
 
             label_col_rack_number = tk.Label(frame_label_rack, text="Rack size (columns x rows)")
             label_col_rack_number.pack(side="bottom", anchor="center")
 
             frame_entries_rack = tk.Frame(self)
-            frame_entries_rack.pack(fill="x", pady=(5, 0))
+            frame_entries_rack.pack(fill="x", pady=(2, 0))
 
             entry_col_rack_number = tk.Entry(frame_entries_rack, textvariable=self.col_rack_number)
             self.col_rack_number.set(9)
@@ -116,7 +117,7 @@ class HomeWindow(tk.Frame):
             entry_row_rack_number.pack(side="right", anchor="center")
 
             frame_labels_blk = tk.Frame(self)
-            frame_labels_blk.pack(fill="x", pady=(5, 0))
+            frame_labels_blk.pack(fill="x", pady=(7, 0))
 
             label_pre_blk = tk.Label(frame_labels_blk, text="Blanks before samples:")
             label_pre_blk.pack(side="left", padx=4, anchor="center")
@@ -125,7 +126,7 @@ class HomeWindow(tk.Frame):
             label_post_blk.pack(side="right", padx=(0, 8), anchor="center")
 
             frame_entries_blk = tk.Frame(self)
-            frame_entries_blk.pack(fill="x", pady=(5, 0))
+            frame_entries_blk.pack(fill="x", pady=(2, 0))
 
             entry_pre_blk = tk.Entry(frame_entries_blk, textvariable=self.pre_blk)
             self.pre_blk.set(4)
@@ -136,7 +137,7 @@ class HomeWindow(tk.Frame):
             entry_post_blk.pack(side="right", anchor="center")
 
             frame_labels_np = tk.Frame(self)
-            frame_labels_np.pack(fill="x", pady=(5, 0))
+            frame_labels_np.pack(fill="x", pady=(7, 0))
 
             label_blk_name = tk.Label(frame_labels_np, text="Blank name:")
             label_blk_name.pack(side="left", padx=40, anchor="center")
@@ -145,7 +146,7 @@ class HomeWindow(tk.Frame):
             label_blk_pos.pack(side="right", padx=(0, 30), anchor="center")
 
             frame_entries_np = tk.Frame(self)
-            frame_entries_np.pack(fill="x", pady=(5, 0))
+            frame_entries_np.pack(fill="x", pady=(2, 0))
 
             entry_blk_name = tk.Entry(frame_entries_np, textvariable=self.blk_name)
             entry_blk_name.pack(side="left", anchor="center")
@@ -154,26 +155,67 @@ class HomeWindow(tk.Frame):
             entry_blk_pos.pack(side="right", anchor="center")
 
             frame_labels_pv = tk.Frame(self)
-            frame_labels_pv.pack(fill="x", pady=(5, 0))
+            frame_labels_pv.pack(fill="x", pady=(7, 0))
 
             label_inj_volume = tk.Label(frame_labels_pv, text="Injection volume (µL):")
             label_inj_volume.pack(side="left", anchor="center", padx=5)
 
-            label_data_path = tk.Label(frame_labels_pv, text="MS data directory")
-            label_data_path.pack(side="right", padx=(0, 25), anchor="center")
+            label_batch = tk.Label(frame_labels_pv, text="Batch:")
+            label_batch.pack(side="right", padx=(0, 60), anchor="center")
 
             frame_entries_pv = tk.Frame(self)
-            frame_entries_pv.pack(fill="x", pady=(5, 0))
+            frame_entries_pv.pack(fill="x", pady=(2, 0))
 
             entry_inj_volume = tk.Entry(frame_entries_pv, textvariable=self.inj_volume)
             self.inj_volume.set(2)
             entry_inj_volume.pack(side="left")
 
-            self.data_path_button = tk.Button(frame_entries_pv, text="output", width=17, command=self.data_folder)
-            self.data_path_button.pack(side="right", padx=1, anchor="center")
+            self.batch_key.set(-1)
+
+            # Extract future code to possibly create
+            collection_url = "https://emi-collection.unifr.ch/directus/items/Batches"
+            column = "batch_id"
+            params: Dict[str, Union[str, int, float, None]] = {"sort[]": f"-{column}", "limit": 1}
+            session = requests.Session()
+            response = session.get(collection_url, params=params)
+            last_value = response.json()["data"][0][column] if response.json()["data"] else "null"
+            last_number = int(last_value.split("_")[1]) if last_value != "null" else 0
+            first_number = last_number + 1
+            self.new_batch = "batch_" f"{first_number:06d}"
+
+            # Fetch batches of type 6
+            params = {"sort[]": f"{column}", "filter[batch_type][_eq]": 6}
+            response = session.get(collection_url, params=params)
+            data = response.json()["data"]
+
+            # Create a mapping dictionary and list of options for the dropdown
+            batch_mapping = {f"New ({self.new_batch})": 0}  # "new" maps to ID 0
+            batch_names = ["Select a batch"]  # Add a placeholder for no default selection
+            batch_names.append(f"New ({self.new_batch})")  # Add "new batch" option
+
+            for item in data:
+                batch_mapping[item[column]] = item["id"]  # Map batch_id to id
+                batch_names.append(item[column])  # Add human-readable batch_id to the dropdown
+
+            # Create the OptionMenu and callback
+            def on_batch_selected(selection: tk.StringVar) -> None:
+                selected_id = batch_mapping.get(str(selection), -1)  # Get the associated ID or None
+                self.batch_key.set(selected_id)  # Update self.batch with the ID
+                os.environ["BATCH"] = str(selection)
+
+            # Use StringVar for the selected value
+            selected_batch = tk.StringVar()
+            selected_batch.set(batch_names[0])  # Set default value to "Select a batch"
+
+            # Create the dropdown
+            self.dropdown_batch = tk.OptionMenu(
+                frame_entries_pv, selected_batch, *batch_names, command=on_batch_selected
+            )
+            self.dropdown_batch.config(width=15, background="PeachPuff2")
+            self.dropdown_batch.pack(side="right", anchor="center")
 
             frame_label_methods = tk.Frame(self)
-            frame_label_methods.pack(fill="x", pady=(5, 0))
+            frame_label_methods.pack(fill="x", pady=(7, 0))
 
             label_method_path = tk.Label(frame_label_methods, text="Method file:")
             label_method_path.pack(side="left", padx=40, anchor="center")
@@ -182,40 +224,60 @@ class HomeWindow(tk.Frame):
             label_standby.pack(side="right", padx=(0, 10), anchor="center")
 
             frame_entries_methods = tk.Frame(self)
-            frame_entries_methods.pack(fill="x", pady=(5, 0))
+            frame_entries_methods.pack(fill="x", pady=(2, 0))
 
             self.method_path_button = tk.Button(
-                frame_entries_methods, text="method", width=17, command=self.method_file
+                frame_entries_methods, text="method", background="lemon chiffon", width=17, command=self.method_file
             )
             self.method_path_button.pack(side="left", padx=1, anchor="center")
 
             self.standby_path_button = tk.Button(
-                frame_entries_methods, text="method", width=17, command=self.standby_file
+                frame_entries_methods, text="method", background="lemon chiffon", width=17, command=self.standby_file
             )
             self.standby_path_button.pack(side="right", anchor="center", padx=(0, 1))
 
             frame_label_output = tk.Frame(self)
-            frame_label_output.pack(pady=(5, 0))
+            frame_label_output.pack(fill="x", pady=(7, 0))
 
-            label_output_path = tk.Label(frame_label_output, text="Sample list output directory: ")
-            label_output_path.pack(side="right")
+            label_data_path = tk.Label(frame_label_output, text="MS data directory")
+            label_data_path.pack(side="left", anchor="center", padx=25)
+
+            label_output_path = tk.Label(frame_label_output, text="Sample list directory: ")
+            label_output_path.pack(side="right", padx=(0, 10), anchor="center")
 
             frame_entry_output = tk.Frame(self)
-            frame_entry_output.pack(pady=(5, 0))
+            frame_entry_output.pack(fill="x", pady=(2, 0))
 
-            self.output_path_button = tk.Button(frame_entry_output, text="output", width=17, command=self.output_folder)
-            self.output_path_button.pack(side="right", padx=(0, 1), anchor="center")
+            self.data_path_button = tk.Button(
+                frame_entry_output, text="output", background="light goldenrod", width=17, command=self.data_folder
+            )
+            self.data_path_button.pack(side="left", padx=1, anchor="center")
+
+            self.output_path_button = tk.Button(
+                frame_entry_output, text="output", background="light goldenrod", width=17, command=self.output_folder
+            )
+            self.output_path_button.pack(side="right", anchor="center", padx=(0, 1))
 
             frame_submit = tk.Frame(self)
-            frame_submit.pack(pady=(50, 0))
+            frame_submit.pack(fill="x", pady=(50, 0))
 
             button_new_batch = tk.Button(
-                frame_submit, text="New sample list", width=20, command=lambda: self.show_values("new")
+                frame_submit,
+                text="New sample list",
+                background="light green",
+                width=17,
+                height=3,
+                command=lambda: self.show_values("new"),
             )
             button_new_batch.pack(side="left")
 
             button_submit_csv = tk.Button(
-                frame_submit, text="Sample list from CSV", width=20, command=lambda: self.show_values("csv")
+                frame_submit,
+                text="Sample list from CSV",
+                background="light blue",
+                width=17,
+                height=3,
+                command=lambda: self.show_values("csv"),
             )
             button_submit_csv.pack(side="right")
         else:
@@ -320,6 +382,7 @@ class HomeWindow(tk.Frame):
         os.environ["BLK_NAME"] = self.blk_name.get()
         os.environ["BLK_POS"] = self.blk_pos.get()
         os.environ["INJ_VOLUME"] = str(self.inj_volume.get())
+        os.environ["BATCH_KEY"] = str(self.batch_key.get())
         # Launches test connection to directus
         self.clicked_button = clicked_button
         self.testConnection()
@@ -339,13 +402,23 @@ class HomeWindow(tk.Frame):
         username = os.environ.get("USERNAME")
         password = os.environ.get("PASSWORD")
         operator = os.environ.get("OPERATOR")
-        ms_id = os.environ.get("MS_ID")
+        ms_id = str(os.environ.get("MS_ID"))
         col_rack_number = os.environ.get("COL_RACK_NUMBER")
         row_rack_number = os.environ.get("ROW_RACK_NUMBER")
         inj_volume = os.environ.get("INJ_VOLUME")
         method_file = os.environ.get("METHOD_FILE")
         data_folder = os.environ.get("DATA_FOLDER")
         output_folder = os.environ.get("OUTPUT_FOLDER")
+        batch = int(str(os.environ.get("BATCH_KEY")))
+
+        instrument_key = get_primary_key(
+            "https://emi-collection.unifr.ch/directus/items/Instruments", ms_id, "instrument_id"
+        )
+        injection_method_key = get_primary_key(
+            "https://emi-collection.unifr.ch/directus/items/Injection_Methods", self.file, "method_name"
+        )
+        os.environ["INSTRUMENT_KEY"] = str(instrument_key)
+        os.environ["INJECTION_METHOD_KEY"] = str(injection_method_key)
 
         if (
             username
@@ -358,6 +431,9 @@ class HomeWindow(tk.Frame):
             and method_file
             and data_folder
             and output_folder
+            and batch != -1
+            and instrument_key != -1
+            and injection_method_key != -1
         ):
             # Define the Directus base URL
             base_url = "https://emi-collection.unifr.ch/directus"
@@ -375,6 +451,10 @@ class HomeWindow(tk.Frame):
                 access_token = data["access_token"]
                 os.environ["ACCESS_TOKEN"] = str(access_token)
 
+                if batch == 0:
+                    batch = self.add_batch(access_token)
+                    os.environ["BATCH_KEY"] = str(batch)
+
                 # Test if the method is already present in directus
                 access_token = os.environ.get("ACCESS_TOKEN")
                 collection_url = base_url + "/items/Injection_Methods/"
@@ -385,7 +465,7 @@ class HomeWindow(tk.Frame):
                 response = session.get(collection_url, params=params)
                 value = response.status_code
                 # if already present, launches the sample list window
-                if value == 200:
+                if value == 200 and batch > 0:
                     data = str(response.json()["data"])
                     if data == "[]":
                         self.add_method(access_token, collection_url)
@@ -401,7 +481,7 @@ class HomeWindow(tk.Frame):
 
         else:
             # If user didn't enter all necessary values, shows this message
-            self.label.config(text="Please provide all asked values", foreground="red")
+            self.label.config(text="Please provide all values / valid values", foreground="red")
 
     def add_method(self, access_token: str, collection_url: str) -> None:
         """
@@ -419,10 +499,37 @@ class HomeWindow(tk.Frame):
 
         response = session.post(url=collection_url, headers=headers, json=data)
 
-        # if method is successfully added to directus, launchtes the sample list window
+        # if method is successfully added to directus, launches the sample list window
         if response.status_code == 200:
             # Hide the main page and open Window 2
             self.manage_choice()
+
+    def add_batch(self, access_token: str) -> int:
+        """
+        Adds an injection method to directus
+        """
+
+        # Send data to directus
+        session = requests.Session()
+        session.headers.update({"Authorization": f"Bearer {access_token}"})
+
+        # Add headers
+        headers = {"Content-Type": "application/json"}
+
+        collection_url = "https://emi-collection.unifr.ch/directus/items/Batches"
+
+        data = {
+            "batch_id": self.new_batch,
+            "batch_type": 6,
+            "short_description": "ms batch",
+            "description": "ms batch",
+        }
+
+        response = session.post(url=collection_url, headers=headers, json=data)
+
+        # if method is successfully added to directus, launches the sample list window
+        batch_id = response.json()["data"]["id"] if response.status_code == 200 else -1
+        return batch_id
 
     def manage_choice(self) -> None:
         """
@@ -495,7 +602,11 @@ class newBatch:
         self.standby_file = str(os.environ.get("STANDBY_FILE"))
         self.output_folder = str(os.environ.get("OUTPUT_FOLDER"))
         self.file = str(os.environ.get("FILE"))
-        self.csv_path = f"{self.output_folder}/{datetime.now().strftime('%Y%m%d')}_{self.operator}_dbgi_{self.file}.csv"
+        self.batch_key = int(str(os.environ.get("BATCH_KEY")))
+        self.batch = str(os.environ.get("BATCH"))
+        self.instrument_key = int(str(os.environ.get("INSTRUMENT_KEY")))
+        self.injection_method_key = int(str(os.environ.get("INJECTION_METHOD_KEY")))
+        self.csv_path = f"{self.output_folder}/{datetime.now().strftime('%Y%m%d')}_{self.operator}_emi_{self.file}.csv"
         self.current_position = 1
         self.current_row = 1
         self.timestamp = datetime.now().strftime("%Y%m%d%H%M")
@@ -512,6 +623,7 @@ class newBatch:
                 "Instrument Method",
                 "Position",
                 "Inj Vol",
+                "Batch",
             ),
             show="headings",
             selectmode="browse",
@@ -524,6 +636,7 @@ class newBatch:
         self.tree.heading("Instrument Method", text="Instrument Method")
         self.tree.heading("Position", text="Position")
         self.tree.heading("Inj Vol", text="Inj Vol")
+        self.tree.heading("Batch", text="Batch")
 
         # Bind Enter key to add row
         self.new_batch_window.bind("<Return>", self.add_row)
@@ -551,7 +664,6 @@ class newBatch:
 
         # Start the Tkinter event loop
         self.new_batch_window.mainloop()
-        self.root.withdraw()
 
     def on_exit(self) -> None:
         """
@@ -586,9 +698,6 @@ class newBatch:
             self.label.config(text="aliquot id can't be empty!", foreground="red")
             return
 
-        parts = str(self.method_file).split("/")
-        file = parts[-1]
-
         # Placeholder calculations for other columns
         filename = self.timestamp + "_" + str(self.operator) + "_" + aliquot_id
         path = self.data_path.replace("/", "\\")
@@ -604,13 +713,18 @@ class newBatch:
         # Add headers
         headers = {"Content-Type": "application/json"}
 
+        aliquot_key = get_primary_key(
+            "https://emi-collection.unifr.ch/directus/items/Containers", aliquot_id, "container_id"
+        )
+
         data = {
-            "parent_sample_container": aliquot_id,
+            "parent_sample_container": aliquot_key,
             "filename": filename,
-            "instrument_used": self.ms_id,
+            "instrument_used": self.instrument_key,
             "injection_volume": inj_volume,
             "injection_volume_unit": 18,
-            "injection_method": file,
+            "injection_method": self.injection_method_key,
+            "batch": self.batch_key,
         }
 
         response = session.post(url=collection_url, headers=headers, json=data)
@@ -653,7 +767,17 @@ class newBatch:
             item_id = self.tree.insert(
                 "",
                 "end",
-                values=(aliquot_id, self.operator, self.ms_id, filename, path, instrument_method, position, inj_volume),
+                values=(
+                    aliquot_id,
+                    self.operator,
+                    self.ms_id,
+                    filename,
+                    path,
+                    instrument_method,
+                    position,
+                    inj_volume,
+                    self.batch,
+                ),
             )
 
             # Scroll to the last added row
@@ -666,7 +790,7 @@ class newBatch:
         elif response.status_code == 401:
             self.directus_reconnect()
         else:
-            self.label.config(text="Directus error, check your entry!", foreground="red")
+            self.label.config(text=f"Directus error, {aliquot_id} doesn't seem to be valid!", foreground="red")
 
     def submit_table(self) -> None:
         """
@@ -686,9 +810,8 @@ class newBatch:
             return
 
         # Extract data from the Treeview
-        raw_data = [self.tree.item(item, "values")[3:] for item in all_items]  # Skip the first two elements
+        raw_data = [self.tree.item(item, "values")[3:8] for item in all_items]  # Skip the first two elements
         data_to_export = sorted(raw_data, key=blanks_first)
-        print(data_to_export)
 
         # Write data to the CSV file
         with open(self.csv_path, "w", newline="") as csv_file:
@@ -702,7 +825,7 @@ class newBatch:
                 for i in range(1, self.pre_blk + 1):
                     padded_number = str(i).zfill(2)
                     filename = (
-                        self.timestamp + "_" + self.operator + "_dbgi_" + self.blk_name + "_blk_pre" + padded_number
+                        self.timestamp + "_" + self.operator + "_emi_" + self.blk_name + "_blk_pre" + padded_number
                     )
                     path = self.data_path.replace("/", "\\")
                     instrument_method = self.method_file.replace("/", "\\")
@@ -720,7 +843,7 @@ class newBatch:
                 for i in range(1, self.post_blk + 1):
                     padded_number = str(i).zfill(2)
                     filename = (
-                        self.timestamp + "_" + self.operator + "_dbgi_" + self.blk_name + "_blk_post" + padded_number
+                        self.timestamp + "_" + self.operator + "_emi_" + self.blk_name + "_blk_post" + padded_number
                     )
                     path = self.data_path.replace("/", "\\")
                     instrument_method = self.method_file.replace("/", "\\")
@@ -740,9 +863,15 @@ class newBatch:
             inj_volume = self.inj_volume
             csv_writer.writerow([filename, path, standby, position, inj_volume])
 
-        # Close the Tkinter window
+        self.label.config(text="Sample list correctly generated!", foreground="green")
+
+        # Schedule the window to be destroyed after 2000 milliseconds (2 seconds)
+        self.new_batch_window.after(2000, self.destroy_window)
+
+    # Define the function to destroy the window
+    def destroy_window(self) -> None:
         self.new_batch_window.destroy()
-        self.root.destroy()
+        self.root.deiconify()
 
     def directus_reconnect(self) -> None:
         """
@@ -794,7 +923,7 @@ def blanks_first(item: Any) -> Any:
     # Extract the sample ID from the file name
     sample_id = item[0].split("_")[3]
     # Check if the sample ID contains 'batch'
-    if sample_id.startswith("batch"):
+    if sample_id.startswith("blk"):
         return (0, sample_id)  # If yes, put it in first place
     else:
         return (1, sample_id)  # Else, put it after
@@ -885,10 +1014,14 @@ class csvBatch(tk.Frame):
         self.data_path = str(os.environ.get("DATA_FOLDER"))
         self.standby_file = str(os.environ.get("STANDBY_FILE"))
         self.file = str(os.environ.get("FILE"))
+        self.batch_key = int(str(os.environ.get("BATCH_KEY")))
+        self.batch = str(os.environ.get("BATCH"))
+        self.instrument_key = int(str(os.environ.get("INSTRUMENT_KEY")))
+        self.injection_method_key = int(str(os.environ.get("INJECTION_METHOD_KEY")))
         self.current_position = 1
         self.current_row = 1
         self.timestamp = datetime.now().strftime("%Y%m%d%H%M")
-        self.csv_path = f"{self.output_folder}/{datetime.now().strftime('%Y%m%d')}_{self.operator}_dbgi_{self.file}.csv"
+        self.csv_path = f"{self.output_folder}/{datetime.now().strftime('%Y%m%d')}_{self.operator}_emi_{self.file}.csv"
 
         self.warning_label = tk.Label(
             self.csv_batch_window,
@@ -971,33 +1104,37 @@ class csvBatch(tk.Frame):
         # Update data path, instrument method and injection volume
         path = self.data_path.replace("/", "\\")
         instrument_method = self.method_file.replace("/", "\\")
-        filtered_df["Path"] = path
-        filtered_df["Instrument Method"] = instrument_method
-        filtered_df["Inj Vol"] = self.inj_volume
+        filtered_df.loc[:, "Path"] = path
+        filtered_df.loc[:, "Instrument Method"] = instrument_method
+        filtered_df.loc[:, "Inj Vol"] = self.inj_volume
 
         # Change timestamp and operator initials
-        filtered_df["File Name"] = df["File Name"].apply(
+        filtered_df.loc[:, "File Name"] = df.loc[:, "File Name"].apply(
             lambda x: "_".join([self.timestamp, self.operator] + x.split("_")[2:])
         )
 
         # Prepare data for directus
         directus_df = filtered_df
         directus_df = directus_df.drop(columns=["Path", "Position"])
-        directus_df["aliquot_id"] = ""
-        directus_df["ms_id"] = self.ms_id
-        directus_df = directus_df.rename(columns={"File Name": "mass_spec_id"})
+        directus_df = directus_df.rename(columns={"File Name": "filename"})
+        directus_df["parent_sample_container"] = ""
         directus_df = directus_df.rename(columns={"Inj Vol": "injection_volume"})
+        directus_df["injection_volume_unit"] = 18
         directus_df = directus_df.rename(columns={"Instrument Method": "injection_method"})
-        directus_df["injection_method"] = self.file
+        directus_df["instrument_used"] = self.instrument_key
+        directus_df["injection_method"] = self.injection_method_key
+        directus_df["batch"] = self.batch_key
         for index, row in directus_df.iterrows():  # Iterate over rows using iterrows()
-            parts = row["mass_spec_id"].split("_")  # Split the "File Name" column by underscores
+            parts = row["filename"].split("_")  # Split the "File Name" column by underscores
             aliquot_id = "_".join(parts[2:])  # Extract the desired parts of the split string
-            directus_df.at[index, "aliquot_id"] = aliquot_id
+            directus_df.at[index, "parent_sample_container"] = get_primary_key(
+                "https://emi-collection.unifr.ch/directus/items/Containers", aliquot_id, "container_id"
+            )
 
         # Send data to directus
         records = directus_df.to_json(orient="records")
         base_url = "https://emi-collection.unifr.ch/directus"
-        collection_url = base_url + "/items/Mass_Spectrometry_Analysis"
+        collection_url = base_url + "/items/MS_Data"
         session = requests.Session()
         headers = {"Content-Type": "application/json"}
         session.headers.update({"Authorization": f"Bearer {self.access_token}"})
@@ -1018,15 +1155,13 @@ class csvBatch(tk.Frame):
                     for i in range(1, self.pre_blk + 1):
                         padded_number = str(i).zfill(2)
                         filename = (
-                            self.timestamp + "_" + self.operator + "_dbgi_" + self.blk_name + "_blk_pre" + padded_number
+                            self.timestamp + "_" + self.operator + "_emi_" + self.blk_name + "_blk_pre" + padded_number
                         )
                         path = self.data_path.replace("/", "\\")
                         instrument_method = self.method_file.replace("/", "\\")
                         position = self.blk_pos
                         inj_volume = self.inj_volume
                         csv_writer.writerow([filename, path, instrument_method, position, inj_volume])
-                else:
-                    print("no pre blanks")
 
                 # Write data
                 csv_writer.writerows(filtered_df.values)
@@ -1036,21 +1171,13 @@ class csvBatch(tk.Frame):
                     for i in range(1, self.post_blk + 1):
                         padded_number = str(i).zfill(2)
                         filename = (
-                            self.timestamp
-                            + "_"
-                            + self.operator
-                            + "_dbgi_"
-                            + self.blk_name
-                            + "_blk_post"
-                            + padded_number
+                            self.timestamp + "_" + self.operator + "_emi_" + self.blk_name + "_blk_post" + padded_number
                         )
                         path = self.data_path.replace("/", "\\")
                         instrument_method = self.method_file.replace("/", "\\")
                         position = self.blk_pos
                         inj_volume = self.inj_volume
                         csv_writer.writerow([filename, path, instrument_method, position, inj_volume])
-                else:
-                    print("no post blanks")
 
                 # Write standby line
                 parts = self.standby_file.split("/")
@@ -1062,17 +1189,31 @@ class csvBatch(tk.Frame):
                 inj_volume = self.inj_volume
                 csv_writer.writerow([filename, path, standby, position, inj_volume])
 
-            # Close the Tkinter window
-            self.csv_batch_window.destroy()
-            self.root.destroy()
+            self.warning_label.config(text="Sample list correctly generated!", foreground="green")
+
+            # Schedule the window to be destroyed after 2000 milliseconds (2 seconds)
+            self.csv_batch_window.after(2000, self.destroy_window)
         else:
             self.warning_label.config(text="Directus error, please check your CSV.", foreground="red")
+
+    # Define the function to destroy the window
+    def destroy_window(self) -> None:
+        self.csv_batch_window.destroy()
+        self.root.deiconify()
+
+
+def get_primary_key(collection_url: str, value: str, column: str) -> int:
+    params: Dict[str, Union[str, int, float, None]] = {f"filter[{column}][_eq]": value, "limit": 1}
+    session = requests.Session()
+    response = session.get(collection_url, params=params)
+    key = response.json()["data"][0]["id"] if response.json()["data"] else -1
+    return key
 
 
 # Create an instance of the main window
 root = tk.Tk()
 root.title("Home")
-root.minsize(600, 600)
+root.minsize(550, 650)
 
 # Create an instance of the HomeWindow class
 home = HomeWindow(root)

@@ -414,11 +414,8 @@ class HomeWindow(tk.Frame):
         instrument_key = get_primary_key(
             "https://emi-collection.unifr.ch/directus/items/Instruments", ms_id, "instrument_id"
         )
-        injection_method_key = get_primary_key(
-            "https://emi-collection.unifr.ch/directus/items/Injection_Methods", self.file, "method_name"
-        )
+
         os.environ["INSTRUMENT_KEY"] = str(instrument_key)
-        os.environ["INJECTION_METHOD_KEY"] = str(injection_method_key)
 
         if (
             username
@@ -432,8 +429,8 @@ class HomeWindow(tk.Frame):
             and data_folder
             and output_folder
             and batch != -1
+            and self.file != ""
             and instrument_key != -1
-            and injection_method_key != -1
         ):
             # Define the Directus base URL
             base_url = "https://emi-collection.unifr.ch/directus"
@@ -487,6 +484,7 @@ class HomeWindow(tk.Frame):
         """
         Adds an injection method to directus
         """
+        print("add new method is called")
 
         # Send data to directus
         session = requests.Session()
@@ -503,6 +501,8 @@ class HomeWindow(tk.Frame):
         if response.status_code == 200:
             # Hide the main page and open Window 2
             self.manage_choice()
+        else:
+            print(f"Error creating method: status code: {response.status_code}, message: {response.text}")
 
     def add_batch(self, access_token: str) -> int:
         """

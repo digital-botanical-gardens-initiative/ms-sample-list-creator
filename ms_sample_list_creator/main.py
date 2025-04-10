@@ -1,4 +1,4 @@
-# To generate binaries for this script, install pyinstaller (pip install pyinstaller) and run "pyinstaller --onefile main.py"
+# Run "pyinstaller --onefile main.py"
 # Generated binaries are made for the native system where the pyinstaller command is run.
 
 # You can generate windows executable from linux using wine, by previously installing wine, python 3.8.19, pyinstaller and
@@ -414,6 +414,9 @@ class HomeWindow(tk.Frame):
         instrument_key = get_primary_key(
             "https://emi-collection.unifr.ch/directus/items/Instruments", ms_id, "instrument_id"
         )
+        injection_method_key = get_primary_key(
+            "https://emi-collection.unifr.ch/directus/items/Injection_Methods", self.file, "method_name"
+        )
 
         os.environ["INSTRUMENT_KEY"] = str(instrument_key)
 
@@ -452,21 +455,13 @@ class HomeWindow(tk.Frame):
                     batch = self.add_batch(access_token)
                     os.environ["BATCH_KEY"] = str(batch)
 
-                # Test if the method is already present in directus
-                access_token = os.environ.get("ACCESS_TOKEN")
-                collection_url = base_url + "/items/Injection_Methods/"
-                params = {"filter[method_name][_eq]": self.file}
-                session = requests.Session()
-                session.headers.update({"Authorization": f"Bearer {access_token}"})
-                # collection_url = base_url + '/items/samples'
-                response = session.get(collection_url, params=params)
-                value = response.status_code
-                # if already present, launches the sample list window
-                if value == 200 and batch > 0:
-                    data = str(response.json()["data"])
-                    if data == "[]":
-                        self.add_method(access_token, collection_url)
+                if batch > 0:
+                    if injection_method_key == -1:
+                        self.add_method(access_token)
                     else:
+                        # As injection method already exist attribute it
+                        os.environ["INJECTION_METHOD_KEY"] = str(injection_method_key)
+
                         # Hide the main page and open Window 2
                         self.manage_choice()
                 else:
@@ -480,11 +475,10 @@ class HomeWindow(tk.Frame):
             # If user didn't enter all necessary values, shows this message
             self.label.config(text="Please provide all values / valid values", foreground="red")
 
-    def add_method(self, access_token: str, collection_url: str) -> None:
+    def add_method(self, access_token: str) -> None:
         """
         Adds an injection method to directus
         """
-        print("add new method is called")
 
         # Send data to directus
         session = requests.Session()
@@ -493,14 +487,24 @@ class HomeWindow(tk.Frame):
         # Add headers
         headers = {"Content-Type": "application/json"}
 
+        # Define the data to be sent
         data = {"method_name": self.file}
 
+        # Define the Directus URL
+        base_url = "https://emi-collection.unifr.ch/directus"
+        collection_url = base_url + "/items/Injection_Methods/"
+
+        # Send a POST request to create the new method
         response = session.post(url=collection_url, headers=headers, json=data)
 
         # if method is successfully added to directus, launches the sample list window
         if response.status_code == 200:
+            injection_method_key = response.json()["data"]["id"]
+            os.environ["INJECTION_METHOD_KEY"] = str(injection_method_key)
+
             # Hide the main page and open Window 2
             self.manage_choice()
+
         else:
             print(f"Error creating method: status code: {response.status_code}, message: {response.text}")
 

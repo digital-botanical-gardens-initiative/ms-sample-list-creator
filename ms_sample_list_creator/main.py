@@ -10,7 +10,7 @@ import tkinter as tk
 import webbrowser
 from datetime import datetime
 from tkinter import filedialog, ttk
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 import requests
@@ -44,6 +44,8 @@ class HomeWindow(tk.Frame):
         self.blk_pos = tk.StringVar(None)
         self.inj_volume = tk.IntVar(None)
         self.batch_key = tk.IntVar(None)
+        self.method_files: List[str] = []
+        self.file: str = ""
 
         # Send a request to github to know if this version is the las one
         release_url = (
@@ -54,7 +56,7 @@ class HomeWindow(tk.Frame):
         data = response.json()["tag_name"]
         tag = float(str.replace(data, "v.", ""))
 
-        if tag <= 1.0:
+        if tag <= 2.0:
             self.label = tk.Label(self, text="Connect to directus and adjust the parameters")
             self.label.pack()
 
@@ -220,16 +222,24 @@ class HomeWindow(tk.Frame):
             label_method_path = tk.Label(frame_label_methods, text="Method file:")
             label_method_path.pack(side="left", padx=40, anchor="center")
 
+            self.method_select_frame = tk.Frame(self)
+            self.method_select_frame.pack(fill="x", pady=(2, 0))
+
+            # Bouton "+"
+            add_method_btn = tk.Button(
+                self.method_select_frame,
+                text="+",
+                command=self.add_method_selector,
+                width=2,
+                background="lemon chiffon",
+            )
+            add_method_btn.pack(side="left", padx=40)
+
             label_standby = tk.Label(frame_label_methods, text="Standby method file: ")
             label_standby.pack(side="right", padx=(0, 10), anchor="center")
 
             frame_entries_methods = tk.Frame(self)
             frame_entries_methods.pack(fill="x", pady=(2, 0))
-
-            self.method_path_button = tk.Button(
-                frame_entries_methods, text="method", background="lemon chiffon", width=17, command=self.method_file
-            )
-            self.method_path_button.pack(side="left", padx=1, anchor="center")
 
             self.standby_path_button = tk.Button(
                 frame_entries_methods, text="method", background="lemon chiffon", width=17, command=self.standby_file
@@ -308,7 +318,17 @@ class HomeWindow(tk.Frame):
             folder = parts[-1]
             self.data_path_button.config(text=folder)
 
-    def method_file(self) -> None:
+    def add_method_selector(self) -> None:
+        frame = ttk.Frame(self.method_select_frame)
+        frame.pack(fill="x", pady=2)
+
+        method_label = ttk.Label(frame, text="Methods:")
+        method_label.pack(side="left")
+
+        method_button = ttk.Button(frame, text="Add method", command=lambda: self.select_method_file(method_button))
+        method_button.pack(side="left", padx=5)
+
+    def select_method_file(self, button: ttk.Button) -> None:
         """
         Asks the user to choose the injection method file he wants to use.
 
@@ -318,13 +338,12 @@ class HomeWindow(tk.Frame):
         Returns:
             None
         """
-        method_file = filedialog.askopenfilename(filetypes=[("methods", "*.meth")]).split(".")[0]
-        if method_file:
-            os.environ["METHOD_FILE"] = method_file
-            parts = method_file.split("/")
-            self.file = parts[-1]
-            os.environ["FILE"] = self.file
-            self.method_path_button.config(text=self.file)
+        file_path = filedialog.askopenfilename(filetypes=[("methods", "*.meth")])
+        if file_path:
+            method_file = file_path.rsplit(".", 1)[0]  # évite un bug si le nom contient plusieurs "."
+            self.method_files.append(method_file)
+            file_name = os.path.basename(method_file)
+            button.config(text=file_name)
 
     def standby_file(self) -> None:
         """

@@ -425,16 +425,18 @@ class HomeWindow(tk.Frame):
         col_rack_number = os.environ.get("COL_RACK_NUMBER")
         row_rack_number = os.environ.get("ROW_RACK_NUMBER")
         inj_volume = os.environ.get("INJ_VOLUME")
-        method_file = os.environ.get("METHOD_FILE")
+        # method_file = os.environ.get("METHOD_FILE")
         data_folder = os.environ.get("DATA_FOLDER")
         output_folder = os.environ.get("OUTPUT_FOLDER")
         batch = int(str(os.environ.get("BATCH_KEY")))
+
+        method_file = self.method_files[0] if self.method_files else ""
 
         instrument_key = get_primary_key(
             "https://emi-collection.unifr.ch/directus/items/Instruments", ms_id, "instrument_id"
         )
         injection_method_key = get_primary_key(
-            "https://emi-collection.unifr.ch/directus/items/Injection_Methods", self.file, "method_name"
+            "https://emi-collection.unifr.ch/directus/items/Injection_Methods", method_file, "method_name"
         )
 
         os.environ["INSTRUMENT_KEY"] = str(instrument_key)
@@ -447,11 +449,11 @@ class HomeWindow(tk.Frame):
             and col_rack_number
             and row_rack_number
             and inj_volume
-            and method_file
+            # and method_file
             and data_folder
             and output_folder
             and batch != -1
-            and self.file != ""
+            # and self.file != ""
             and instrument_key != -1
         ):
             # Define the Directus base URL
@@ -1226,12 +1228,37 @@ class csvBatch(tk.Frame):
 
 
 def get_primary_key(collection_url: str, value: str, column: str) -> int:
+    # params: Dict[str, Union[str, int, float, None]] = {f"filter[{column}][_eq]": value, "limit": 1}
+    # session = requests.Session()
+    # response = session.get(collection_url, params=params)
+    # key = response.json()["data"][0]["id"] if response.json()["data"] else -1
+    # return key
     params: Dict[str, Union[str, int, float, None]] = {f"filter[{column}][_eq]": value, "limit": 1}
-    session = requests.Session()
-    response = session.get(collection_url, params=params)
-    key = response.json()["data"][0]["id"] if response.json()["data"] else -1
-    return key
 
+    try:
+        session = requests.Session()
+        response = session.get(collection_url, params=params)
+        response.raise_for_status()  # rise exeption if status is not 2xx
+        json_data = response.json()
+    except requests.RequestException as e:
+        print(f"HTTP request error: : {e}")
+        return -1
+    except ValueError:
+        print(f" parsing JSON Error: {response.text}")
+        return -1
+
+    if "data" not in json_data:
+        print(f"Key 'data' is missing : {json_data}")
+        return -1
+
+    if not json_data["data"]:
+        print(f"No result for {column} = {value}")
+        return -1
+
+    return int(json_data["data"][0].get("id", -1))
+
+
+###
 
 # Create an instance of the main window
 root = tk.Tk()

@@ -1,8 +1,8 @@
 # Run "pyinstaller --onefile main.py"
 # Generated binaries are made for the native system where the pyinstaller command is run.
 
-# You can generate windows executable from linux using wine, by previously installing wine, python 3.8.19, pyinstaller and
-# other non-built-in packages (here requests and pandas) inside wine. Then run: wine pyinstaller --onefile main.py
+# You can generate windows executable from linux using wine, by previously installing wine, python 3.8.20, pyinstaller and
+# other non-built-in packages (here requests and pandas) inside wine. Then run: wine PyInstaller --onefile main.py
 
 import csv
 import os
@@ -56,7 +56,11 @@ class HomeWindow(tk.Frame):
         data = response.json()["tag_name"]
         tag = float(str.replace(data, "v.", ""))
 
+<<<<<<< HEAD
         if tag <= 2.0:
+=======
+        if tag <= 1.1:
+>>>>>>> dd8221e3ec19ee2bd8f07ea1d15bc365430b2e86
             self.label = tk.Label(self, text="Connect to directus and adjust the parameters")
             self.label.pack()
 

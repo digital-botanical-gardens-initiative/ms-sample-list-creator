@@ -56,11 +56,7 @@ class HomeWindow(tk.Frame):
         data = response.json()["tag_name"]
         tag = float(str.replace(data, "v.", ""))
 
-<<<<<<< HEAD
         if tag <= 2.0:
-=======
-        if tag <= 1.1:
->>>>>>> dd8221e3ec19ee2bd8f07ea1d15bc365430b2e86
             self.label = tk.Label(self, text="Connect to directus and adjust the parameters")
             self.label.pack()
 
@@ -344,7 +340,7 @@ class HomeWindow(tk.Frame):
         """
         file_path = filedialog.askopenfilename(filetypes=[("methods", "*.meth")])
         if file_path:
-            method_file = file_path.rsplit(".", 1)[0]  # évite un bug si le nom contient plusieurs "."
+            method_file = file_path.rsplit(".", 1)[0]  # avoids a bug if the name contains multiple '.'
             self.method_files.append(method_file)
             file_name = os.path.basename(method_file)
             button.config(text=file_name)
@@ -434,13 +430,8 @@ class HomeWindow(tk.Frame):
         output_folder = os.environ.get("OUTPUT_FOLDER")
         batch = int(str(os.environ.get("BATCH_KEY")))
 
-        method_file = self.method_files[0] if self.method_files else ""
-
         instrument_key = get_primary_key(
             "https://emi-collection.unifr.ch/directus/items/Instruments", ms_id, "instrument_id"
-        )
-        injection_method_key = get_primary_key(
-            "https://emi-collection.unifr.ch/directus/items/Injection_Methods", method_file, "method_name"
         )
 
         os.environ["INSTRUMENT_KEY"] = str(instrument_key)
@@ -480,17 +471,40 @@ class HomeWindow(tk.Frame):
                     batch = self.add_batch(access_token)
                     os.environ["BATCH_KEY"] = str(batch)
 
-                if batch > 0:
-                    if injection_method_key == -1:
-                        self.add_method(access_token)
-                    else:
-                        # As injection method already exist attribute it
-                        os.environ["INJECTION_METHOD_KEY"] = str(injection_method_key)
+                # if batch > 0:
+                #     if injection_method_key == -1:
+                #         self.add_method(access_token)
+                #     else:
+                #         # As injection method already exist attribute it
+                #         os.environ["INJECTION_METHOD_KEY"] = str(injection_method_key)
 
-                        # Hide the main page and open Window 2
+                #         # Hide the main page and open Window 2
+                #         self.manage_choice()
+                # else:
+                #     self.label.config(text="Connexion to directus failed, please try again", foreground="red")
+
+                if batch > 0:
+                    method_keys = []
+                    all_success = True
+
+                    for method_file in self.method_files:
+                        key = get_primary_key(
+                            "https://emi-collection.unifr.ch/directus/items/Injection_Methods",
+                            method_file,
+                            "method_name",
+                        )
+                        if key == -1:
+                            key = self.add_method(access_token, method_file)
+                            if key == -1:
+                                all_success = False
+                        method_keys.append(key)
+
+                    if all_success:
+                        os.environ["INJECTION_METHOD_KEYS"] = ",".join(map(str, method_keys))
+
                         self.manage_choice()
-                else:
-                    self.label.config(text="Connexion to directus failed, please try again", foreground="red")
+                    else:
+                        self.label.config(text="One or more methods could not be added.", foreground="red")
 
             # If connection to directus failed, informs the user that connection failed.
             else:
@@ -500,7 +514,7 @@ class HomeWindow(tk.Frame):
             # If user didn't enter all necessary values, shows this message
             self.label.config(text="Please provide all values / valid values", foreground="red")
 
-    def add_method(self, access_token: str) -> None:
+    def add_method(self, access_token: str, method_file: str) -> Any:
         """
         Adds an injection method to directus
         """
@@ -513,7 +527,7 @@ class HomeWindow(tk.Frame):
         headers = {"Content-Type": "application/json"}
 
         # Define the data to be sent
-        data = {"method_name": self.file}
+        data = {"method_name": method_file}
 
         # Define the Directus URL
         base_url = "https://emi-collection.unifr.ch/directus"
@@ -522,16 +536,23 @@ class HomeWindow(tk.Frame):
         # Send a POST request to create the new method
         response = session.post(url=collection_url, headers=headers, json=data)
 
-        # if method is successfully added to directus, launches the sample list window
+        # # if method is successfully added to directus, launches the sample list window
+        # if response.status_code == 200:
+        #     injection_method_key = response.json()["data"]["id"]
+        #     os.environ["INJECTION_METHOD_KEY"] = str(injection_method_key)
+
+        #     # Hide the main page and open Window 2
+        #     self.manage_choice()
+
+        # else:
+        #     print(f"Error creating method: status code: {response.status_code}, message: {response.text}")
+
         if response.status_code == 200:
-            injection_method_key = response.json()["data"]["id"]
-            os.environ["INJECTION_METHOD_KEY"] = str(injection_method_key)
-
-            # Hide the main page and open Window 2
-            self.manage_choice()
-
+            method_key = response.json()["data"]["id"]
+            return method_key
         else:
             print(f"Error creating method: status code: {response.status_code}, message: {response.text}")
+            return -1
 
     def add_batch(self, access_token: str) -> int:
         """
@@ -634,7 +655,8 @@ class newBatch:
         self.batch_key = int(str(os.environ.get("BATCH_KEY")))
         self.batch = str(os.environ.get("BATCH"))
         self.instrument_key = int(str(os.environ.get("INSTRUMENT_KEY")))
-        self.injection_method_key = int(str(os.environ.get("INJECTION_METHOD_KEY")))
+        # self.injection_method_key = int(str(os.environ.get("INJECTION_METHOD_KEY")))
+        self.injection_method_keys = [int(k) for k in os.environ.get("INJECTION_METHOD_KEYS", "").split(",") if k]
         self.csv_path = f"{self.output_folder}/{datetime.now().strftime('%Y%m%d')}_{self.operator}_emi_{self.file}.csv"
         self.current_position = 1
         self.current_row = 1
@@ -745,81 +767,81 @@ class newBatch:
         aliquot_key = get_primary_key(
             "https://emi-collection.unifr.ch/directus/items/Containers", aliquot_id, "container_id"
         )
+        for injection_method_key in self.injection_method_keys:
+            data = {
+                "parent_sample_container": aliquot_key,
+                "filename": filename,
+                "instrument_used": self.instrument_key,
+                "injection_volume": inj_volume,
+                "injection_volume_unit": 18,
+                "injection_method": injection_method_key,
+                "batch": self.batch_key,
+            }
 
-        data = {
-            "parent_sample_container": aliquot_key,
-            "filename": filename,
-            "instrument_used": self.instrument_key,
-            "injection_volume": inj_volume,
-            "injection_volume_unit": 18,
-            "injection_method": self.injection_method_key,
-            "batch": self.batch_key,
-        }
+            response = session.post(url=collection_url, headers=headers, json=data)
 
-        response = session.post(url=collection_url, headers=headers, json=data)
+            # self.label.config(text="")
 
-        self.label.config(text="")
+            if response.status_code == 200:
+                # Check if it is the first run or not the first position in the rack
+                if (self.current_position > self.col_rack_size and self.current_position > self.col_rack_size) or (
+                    self.current_position == 1 and self.current_row == 1
+                ):
+                    # Open window to ask prefix
+                    ask_prefix_window = tk.Toplevel(self.new_batch_window)
+                    ask_prefix_window.title("Add Prefix")
+                    self.ask_box = AskBoxPrefixWindow(ask_prefix_window)
+                    self.ask_box.pack()
 
-        if response.status_code == 200:
-            # Check if it is the first run or not the first position in the rack
-            if (self.current_position > self.col_rack_size and self.current_position > self.col_rack_size) or (
-                self.current_position == 1 and self.current_row == 1
-            ):
-                # Open window to ask prefix
-                ask_prefix_window = tk.Toplevel(self.new_batch_window)
-                ask_prefix_window.title("Add Prefix")
-                self.ask_box = AskBoxPrefixWindow(ask_prefix_window)
-                self.ask_box.pack()
+                    # Make CsvWindow wait for AskBoxPrefixWindow result
+                    ask_prefix_window.transient(self.new_batch_window)
+                    ask_prefix_window.wait_window(self.ask_box)
 
-                # Make CsvWindow wait for AskBoxPrefixWindow result
-                ask_prefix_window.transient(self.new_batch_window)
-                ask_prefix_window.wait_window(self.ask_box)
+                prefix = os.environ.get("PREFIX")
+                alphabet_letter = chr(ord("A") + self.current_row - 1)
+                position = f"{prefix}{alphabet_letter}{self.current_position}"
 
-            prefix = os.environ.get("PREFIX")
-            alphabet_letter = chr(ord("A") + self.current_row - 1)
-            position = f"{prefix}{alphabet_letter}{self.current_position}"
+                # Update position and box for the next row
+                self.current_position += 1
+                if self.current_position > self.col_rack_size:
+                    self.current_position = 1
+                    self.current_row += 1
 
-            # Update position and box for the next row
-            self.current_position += 1
-            if self.current_position > self.col_rack_size:
-                self.current_position = 1
-                self.current_row += 1
+                # Check if the rack is full
+                if self.current_row > self.row_rack_size:
+                    self.current_position = 1
+                    self.current_row = 1
 
-            # Check if the rack is full
-            if self.current_row > self.row_rack_size:
-                self.current_position = 1
-                self.current_row = 1
+                # display success message
+                self.label.config(text="Correctly added!", foreground="green")
+                # Insert data into Treeview
+                item_id = self.tree.insert(
+                    "",
+                    "end",
+                    values=(
+                        aliquot_id,
+                        self.operator,
+                        self.ms_id,
+                        filename,
+                        path,
+                        instrument_method,
+                        position,
+                        inj_volume,
+                        self.batch,
+                    ),
+                )
 
-            # display success message
-            self.label.config(text="Correctly added!", foreground="green")
-            # Insert data into Treeview
-            item_id = self.tree.insert(
-                "",
-                "end",
-                values=(
-                    aliquot_id,
-                    self.operator,
-                    self.ms_id,
-                    filename,
-                    path,
-                    instrument_method,
-                    position,
-                    inj_volume,
-                    self.batch,
-                ),
-            )
+                # Scroll to the last added row
+                self.tree.see(item_id)
 
-            # Scroll to the last added row
-            self.tree.see(item_id)
+                # Clear entry widgets
+                self.aliquot_id_entry.delete(0, "end")
 
-            # Clear entry widgets
-            self.aliquot_id_entry.delete(0, "end")
-
-        # Catches forbidden access when token is expired and generates a new token
-        elif response.status_code == 401:
-            self.directus_reconnect()
-        else:
-            self.label.config(text=f"Directus error, {aliquot_id} doesn't seem to be valid!", foreground="red")
+            # Catches forbidden access when token is expired and generates a new token
+            elif response.status_code == 401:
+                self.directus_reconnect()
+            else:
+                self.label.config(text=f"Directus error, {aliquot_id} doesn't seem to be valid!", foreground="red")
 
     def submit_table(self) -> None:
         """
@@ -1046,7 +1068,8 @@ class csvBatch(tk.Frame):
         self.batch_key = int(str(os.environ.get("BATCH_KEY")))
         self.batch = str(os.environ.get("BATCH"))
         self.instrument_key = int(str(os.environ.get("INSTRUMENT_KEY")))
-        self.injection_method_key = int(str(os.environ.get("INJECTION_METHOD_KEY")))
+        # self.injection_method_key = int(str(os.environ.get("INJECTION_METHOD_KEY")))
+        self.injection_method_keys = [int(k) for k in os.environ.get("INJECTION_METHOD_KEYS", "").split(",") if k]
         self.current_position = 1
         self.current_row = 1
         self.timestamp = datetime.now().strftime("%Y%m%d%H%M")
@@ -1151,11 +1174,31 @@ class csvBatch(tk.Frame):
         directus_df["injection_volume_unit"] = 18
         directus_df = directus_df.rename(columns={"Instrument Method": "injection_method"})
         directus_df["instrument_used"] = self.instrument_key
-        directus_df["injection_method"] = self.injection_method_key
+        # directus_df["injection_method"] = self.injection_method_key
         directus_df["batch"] = self.batch_key
         for index, row in directus_df.iterrows():  # Iterate over rows using iterrows()
             parts = row["filename"].split("_")  # Split the "File Name" column by underscores
             aliquot_id = "_".join(parts[2:])  # Extract the desired parts of the split string
+            directus_df.at[index, "parent_sample_container"] = get_primary_key(
+                "https://emi-collection.unifr.ch/directus/items/Containers", aliquot_id, "container_id"
+            )
+        # Extend the DataFrame for each injection method selected
+        injection_method_keys = self.injection_method_keys  # Must be a list
+        extended_rows = []
+
+        for _, row in directus_df.iterrows():
+            for method_key in injection_method_keys:
+                new_row = row.copy()
+                new_row["injection_method"] = method_key
+                extended_rows.append(new_row)
+
+        # Convert to new extended DataFrame
+        directus_df = pd.DataFrame(extended_rows)
+
+        # Add the parent_sample_container to each line
+        for index, row in directus_df.iterrows():
+            parts = row["filename"].split("_")
+            aliquot_id = "_".join(parts[2:])
             directus_df.at[index, "parent_sample_container"] = get_primary_key(
                 "https://emi-collection.unifr.ch/directus/items/Containers", aliquot_id, "container_id"
             )

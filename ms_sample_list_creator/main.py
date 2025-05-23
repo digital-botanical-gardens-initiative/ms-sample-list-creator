@@ -12,6 +12,14 @@ from .home import HomeWindow
 from .new_version_available import NewVersionAvailable
 
 
+def main() -> None:
+    check_version()
+
+
+if __name__ == "__main__":
+    main()
+
+
 def check_version() -> None:
     """
     Checks if the current version of the script is up to date.
@@ -60,6 +68,3 @@ def check_version() -> None:
 
         # Start the tkinter event loop
         root.mainloop()
-
-
-check_version()

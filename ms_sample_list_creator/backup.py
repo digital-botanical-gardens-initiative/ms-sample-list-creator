@@ -576,7 +576,7 @@
 
 #         response = session.post(url=collection_url, headers=headers, json=data)
 
-#         # if method is successfully added to directus, launches the sample list window
+#         if method is successfully added to directus, launches the sample list window
 #         batch_id = response.json()["data"]["id"] if response.status_code == 200 else -1
 #         return batch_id
 

@@ -1,20 +1,20 @@
 import tkinter as tk
-from typing import Any, Dict, Union
-from tkinter import filedialog, ttk
-from .structure import TkVariables, DirectusSessionData
-from dataclasses import fields
-import os
-import requests
+from tkinter import messagebox, ttk
+from typing import Any
 
-from ms_sample_list_creator import utils
-from .new_sample_list import newBatch
-from .csv_sample_list import csvBatch
+from .implementations.list_var import ListVar
+
+# from .new_sample_list import newBatch
+from .structure import Blank, DirectusCredentials, MassSpectrometry, Methods
+from .utils import gui_utils
+
 
 class HomeWindow(ttk.Frame):
     """
     Class to display a message when a new version of the application is available.
     """
-    def __init__(self, root: tk.Tk, *args: Any, **kwargs: Any): 
+
+    def __init__(self, root: tk.Tk, *args: Any, **kwargs: Any):
         """
         Initializes an instance of the class.
 
@@ -27,14 +27,48 @@ class HomeWindow(ttk.Frame):
         """
         self.root = root
 
-        self.vars = TkVariables()
-        self.session_data = DirectusSessionData()
-
-
-        self.label = ttk.Label(self.root, text="", foreground="red")
-        self.label.pack(pady=5)
-
         ttk.Frame.__init__(self, root, *args, **kwargs)
+
+        self.init_vars()
+
+    def init_vars(self) -> None:
+        """
+        Sets the variables to their default values.
+        """
+        # Blank information
+        self.blank_pre = tk.StringVar(value=str(4))
+        self.blank_post = tk.StringVar(value=str(3))
+        self.blank_name = tk.StringVar(value="blank")
+        self.blank_position = tk.StringVar(value="G:A1")
+
+        # Batch information
+        self.batch_key = tk.StringVar()
+
+        # File paths
+        self.method_files: ListVar = ListVar()
+        self.standby_file = tk.StringVar(
+            value="/home/heloise/repositories/ms-sample-list-creator/tests_files/stdby.meth"
+        )
+        self.output_path = tk.StringVar(value="/home/heloise/repositories/ms-sample-list-creator")
+        self.data_path = tk.StringVar(value="/home/heloise/repositories/ms-sample-list-creator")
+
+        # Directus credentials
+        self.directus_username = tk.StringVar(value="test.user@gmail.com")
+        self.directus_password = tk.StringVar(value="test")
+
+        # Operator
+        self.operator_initials = tk.StringVar(value="CVOL")
+
+        # Mass spectrometer ID
+        self.instrument_id = tk.StringVar(value="inst_000002")
+
+        # Injection volume
+        self.injection_volume = tk.StringVar(value=str(1))
+        self.rack_columns = tk.StringVar(value=str(9))
+        self.rack_rows = tk.StringVar(value=str(6))
+
+        # Batches
+        # batches = gui_utils.get_batches(self)
 
         self.build_gui()
 
@@ -42,519 +76,398 @@ class HomeWindow(ttk.Frame):
         """
         Builds the main GUI elements: fields for user inputs and buttons.
         """
-        # Create a frame for each section
-        self.build_directus_fields()
-        self.build_operator_ms_fields()
-        self.build_sample_settings_fields()
-        self.build_method_section()
-        self.build_standby_selector()
-        self.build_data_selector()
-        self.build_output_selector()
-        self.build_submit_buttons()
 
-    
-    def build_directus_fields(self) -> None:
-        utils.create_label_entry_pair(
-        parent=self,
-        left_label_text="Directus username:",
-        right_label_text="Directus password:",
-        left_var=self.vars.directus.username,  
-        right_var=self.vars.directus.password,
-        show_right="*"
-    )
+        # Top label to display errors
+        self.label = ttk.Label(self.root, text="", foreground="red")
+        self.label.pack(anchor="w", pady=5, padx=10)
 
-    def build_operator_ms_fields(self) -> None:
-        utils.create_label_entry_pair(
-        parent=self,
-        left_label_text="Operator's initials:",
-        right_label_text="Mass spectrometer ID:",
-        left_var=self.vars.operator_settings.operator, 
-        right_var=self.vars.operator_settings.ms_id
-    )
-    
-    def build_sample_settings_fields(self) -> None:
-        """
-        Builds the sample settings section, including rack dimensions and blank info.
-        """
-        utils.create_label_entry_pair(
+        # Directus password and username
+        gui_utils.create_label_input_pair(
+            parent=self,
+            left_label_text="Directus username:",
+            right_label_text="Directus password:",
+            left_var=self.directus_username,
+            right_var=self.directus_password,
+            show_right="*",
+        )
+
+        # Operator initials and mass spectrometer ID
+        self.inst_list = ["Test1", "Test2", "Test3"]
+        gui_utils.create_label_input_pair(
+            parent=self,
+            left_label_text="Operator's initials:",
+            right_label_text="Mass spectrometer ID:",
+            left_var=self.operator_initials,
+            right_var=self.instrument_id,
+            right_type="combobox",
+            right_values=self.inst_list,  # TODO change to the real inst list
+        )
+
+        # Rack dimensions
+        gui_utils.create_label_input_pair(
             parent=self,
             left_label_text="Rack columns:",
             right_label_text="Rack rows:",
-            left_var=self.vars.col_rack_number,
-            right_var=self.vars.row_rack_number
+            left_var=self.rack_columns,
+            right_var=self.rack_rows,
         )
 
-        utils.create_label_entry_pair(
+        # Blank information
+        gui_utils.create_label_input_pair(
             parent=self,
             left_label_text="Blank name:",
             right_label_text="Blank position:",
-            left_var=self.vars.blk_name,
-            right_var=self.vars.blk_pos
+            left_var=self.blank_name,
+            right_var=self.blank_position,
         )
-
-
-    def add_method_selector(self) -> None:
-        frame = ttk.Frame(self.method_select_frame)
-        frame.pack(fill="x", pady=2)
-
-        method_label = ttk.Label(frame, text="Methods:")
-        method_label.pack(side="left")
-
-        method_button = ttk.Button(frame, text="Add method")
-        method_button.pack(side="left", padx=5)
-        method_button.config(command=lambda: self.select_method_file(method_button))
-
-    def data_folder(self) -> None:
-        utils.choose_path_and_update_button(
-            dialog_type="folder",
-            env_var="DATA_FOLDER",
-            button=self.data_path_button,
-            filetype=None
-    )
-        
-    def standby_file(self) -> None:
-        utils.choose_path_and_update_button(
-            dialog_type="file",
-            env_var="STANDBY_FILE",
-            button=self.standby_path_button,
-            filetype=[("methods", "*.meth")]
-    )
-        
-    def output_folder(self) -> None:
-        utils.choose_path_and_update_button(
-        dialog_type="folder",
-        env_var="OUTPUT_FOLDER",
-        button=self.output_path_button,
-        filetype=None
-    )
-        
-    def select_method_file(self, button: ttk.Button) -> None:
-        """
-        Asks the user to choose the injection method file he wants to use.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        file_path = filedialog.askopenfilename(filetypes=[("methods", "*.meth")])
-        if file_path:
-            method_file = file_path.rsplit(".", 1)[0]  # avoids a bug if the name contains multiple '.'
-            self.vars.method_files.append(method_file)
-            file_name = os.path.basename(method_file)
-            button.config(text=file_name)
-
-    def build_method_section(self) -> None:
-        frame_label_methods = ttk.Frame(self)
-        frame_label_methods.pack(fill="x", pady=(7, 0))
-
-        label_method_path = ttk.Label(frame_label_methods, text="Injection method file:")
-        label_method_path.pack(side="left", padx=10)
-
-        self.method_select_frame = ttk.Frame(self)
-        self.method_select_frame.pack(fill="x", pady=(2, 0))
-
-        add_method_btn = ttk.Button(
-            self.method_select_frame,
-            text="+",
-            command=self.add_method_selector,
-            width=2,
-        )
-        add_method_btn.pack(side="left", padx=10)
-
-    def build_standby_selector(self) -> None:
-        self.standby_path_button = utils.create_label_button_row(
+        gui_utils.create_label_input_pair(
             parent=self,
-            label_text="Standby method file:",
-            button_text="Select Standby File",
-            command=self.standby_file
+            left_label_text="Blank before samples:",
+            right_label_text="Blank after samples:",
+            left_var=self.blank_pre,
+            right_var=self.blank_post,
         )
 
-    def build_output_selector(self) -> None:
-        self.output_path_button = utils.create_label_button_row(
+        # Injection volume and batch
+        self.batch_list = ["Test1", "Test2", "Test3"]
+        gui_utils.create_label_input_pair(
             parent=self,
-            label_text="Sample list directory:",
-            button_text="Select Output Folder",
-            command=self.output_folder
+            left_label_text="Injection Volume (µL):",
+            right_label_text="Batch:",
+            left_var=self.injection_volume,
+            right_var=self.batch_key,
+            right_type="combobox",
+            right_values=self.batch_list,  # TODO change to the real batch list
         )
 
-    def build_data_selector(self) -> None:
-        self.data_path_button = utils.create_label_button_row(
-            parent=self,
-            label_text="MS data directory:",
-            button_text="Select Data Folder",
-            command=self.data_folder
-        )
+        # Call to fill in the choices
+        gui_utils.get_batches()
 
-    def build_submit_buttons(self) -> None:
-        frame_submit = tk.Frame(self)
-        frame_submit.pack(fill="x", pady=(50, 0))
+        # Create a frame for each section
+        gui_utils.build_method_section(self)
+        gui_utils.build_standby_selector(self)
+        gui_utils.build_data_selector(self)
+        gui_utils.build_output_selector(self)
+        gui_utils.build_submit_button(self, self.validate_data)
 
-        button_new_batch = ttk.Button(
-            frame_submit,
-            text="New sample list",
-            style="Success.TButton",
-            width=17,
-            command=lambda: self.show_values("new"),
-        )
-        button_new_batch.pack(side="left")
-
-        button_submit_csv = ttk.Button(
-            frame_submit,
-            text="Sample list from CSV",
-            style="Info.TButton",
-            width=17,
-            command=lambda: self.show_values("csv"),
-        )
-        button_submit_csv.pack(side="right")
-
-
-    def show_values(self, clicked_button: str) -> None:
-        """
-        Stores all the parameters entered by the user into the environment variables
-        and launches the connection test to Directus.
-
-        Args:
-            clicked_button (str): A string ("new" or "csv") that defines which window
-                                  will be launched after the home page.
-
-        Returns:
-            None
-        """
-        # Retrieve the entered values and store them in environment variables
-        self.store_in_environment()
-
-        # Set the clicked button to manage future window launch
-        self.clicked_button = clicked_button
-
-        # Proceed to test the connection to Directus
-        self.testConnection()
-
-    def store_in_environment(self) -> None:
-        """
-        Stores all the necessary user input values into environment variables.
-        Automatically stores all attributes of the TkVariables dataclass.
-
-        Returns:
-            None
-        """
-        for field in fields(self.vars):
-            field_value = getattr(self.vars, field.name)
-            
-            # Si la valeur est une Tkinter Variable, on extrait sa valeur
-            if isinstance(field_value, (tk.StringVar, tk.IntVar)):
-                os.environ[field.name.upper()] = str(field_value.get())
-
-    def testConnection(self) -> None:
-        """
-        Tests if the connection to Directus is successful after checking all necessary arguments.
-
-        If all parameters are valid, it tries to authenticate with Directus and stores the access token.
-
-        Returns:
-            None
-        """
-        # Retrieve values from environment variables
-        user_data = self.get_user_data()
-
-        # If all required values are present, attempt the connection
-        if self.are_all_values_present(user_data):
-            self.attempt_connection(user_data)
-        else:
-            self.label.config(text="Please provide all values / valid values", foreground="red")
-    
-    def get_user_data(self) -> dict:
-        """
-        Retrieves all the necessary user data from environment variables.
-        Automatically stores all attributes of the TkVariables dataclass into a dictionary.
-
-        Returns:
-            dict: A dictionary containing all the user data.est
-        """
-        user_data = {}
-
-        for field in fields(self.vars):
-            field_value = getattr(self.vars, field.name)
-            
-            # If the value is a Tkinter Variable, extract its value
-            if isinstance(field_value, (tk.StringVar, tk.IntVar)):
-                user_data[field.name] = field_value.get()
-            else:
-                user_data[field.name] = field_value
-
-        # Manually adds environment variables if necessary
-        user_data["data_folder"] = os.environ.get("DATA_FOLDER", "")
-        user_data["output_folder"] = os.environ.get("OUTPUT_FOLDER", "")
-    
-        return user_data
-    
-    def are_all_values_present(self, user_data: dict) -> bool:
-        """
-        Checks if all the required user values are present and valid.
-
-        Args:
-            user_data (dict): The dictionary containing all user input data.
-
-        Returns:
-            bool: True if all values are valid, False otherwise.
-        """
-        return all(value for value in user_data.values()) and user_data["batch"] != -1
-
-    def attempt_connection(self, user_data: dict) -> None:
-        """
-        Attempts to connect to Directus using the provided user data.
-
-        If the connection is successful, the access token is stored.
-
-        Args:
-            user_data (dict): The dictionary containing the necessary user data.
-
-        Returns:
-            None
-        """
-        # Get the instrument key based on the ms_id
-        instrument_key = self.get_instrument_key(user_data["ms_id"])
-        self.session_data.instrument_key = instrument_key
-
-        # Store the instrument key in the environment if valid
-        if instrument_key != -1:
-            os.environ["INSTRUMENT_KEY"] = str(self.session_data.instrument_key)
-
-            # Define the Directus base URL
-            base_url = "https://emi-collection.unifr.ch/directus"
-            login_url = base_url + "/auth/login"
-
-            # Create a session object for making requests
-            session = requests.Session()
-
-            # Recover connection identifiers from dataclass
-            username = self.vars.directus.username.get()
-            password = self.vars.directus.password.get()
-
-            # Send a POST request to login
-            response = session.post(login_url, json={"email": username, "password": password})
-
-            if response.status_code == 200:
-                self.handle_successful_login(response.json())
-            else:
-                self.label.config(text="Connection to Directus failed, verify your credentials", foreground="red")
-        else:
-            self.label.config(text="Invalid instrument key, please verify your MS_ID", foreground="red")
-    
-    def get_instrument_key(self, ms_id: str) -> int:
-        """
-        Retrieves the primary key of the instrument based on the MS_ID.
-
-        Args:
-            ms_id (str): The mass spectrometer ID.
-
-        Returns:
-            int: The instrument key, or -1 if not found.
-        """
-        ms_id = self.vars.operator_settings.ms_id.get()
-        return utils.get_primary_key(
-            "https://emi-collection.unifr.ch/directus/items/Instruments",
-            ms_id,
-            "instrument_id"
-        )
-    
-    def handle_successful_login(self, data: dict) -> None:
-        """
-        Handles the actions after a successful login to Directus.
-
-        Args:
-            data (dict): The response data containing the access token.
-
-
-        Returns:
-            None
-        """
-        self.session_data.access_token = data["data"]["access_token"]
-        os.environ["ACCESS_TOKEN"] = self.session_data.access_token
-
-        
-        # If batch is 0, create a new batch
-        batch = 0
-        if batch == 0:
-            batch = self.add_batch(self.session_data.access_token)
-
-        self.session_data.batch_key = batch
-        os.environ["BATCH_KEY"] = str(self.session_data.batch_key)  
-
-        if batch > 0:
-            method_keys = []
-            all_success = True
-
-            # Attempt to add each method file
-            for method_file in self.vars.method_files:
-                key = self.add_method(self.session_data.access_token, method_file)
-                if key == -1:
-                    all_success = False
-                method_keys.append(key)
-
-            # If all methods were successfully added, store the method keys
-            if all_success:
-                self.session_data.method_keys = method_keys
-                os.environ["INJECTION_METHOD_KEYS"] = ",".join(map(str, self.session_data.method_keys))
-                self.manage_choice(self.root)
-            else:
-                self.label.config(text="One or more methods could not be added.", foreground="red")
-        else:
-            self.label.config(text="Invalid batch, please check the batch key.", foreground="red")
-
-    def add_method(self, access_token: str, method_file: str) -> int:
-        """
-        Adds an injection method to Directus and returns its ID if successful.
-
-        Args:
-            access_token (str): The JWT access token for authentication.
-            method_file (str): The name of the method to add.
-
-        Returns:
-            int: The Directus ID of the added method, or -1 if it failed.
-        """
-        session = requests.Session()
-        session.headers.update({
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        })
-
-        url = "https://emi-collection.unifr.ch/directus/items/Injection_Methods/"
-        payload = {"method_name": method_file}
-
+    def validate_data(self) -> None:
         try:
-            response = session.post(url=url, json=payload)
-            response.raise_for_status()
-            return int(response.json()["data"]["id"])
-        except requests.RequestException as e:
-            print(f"Failed to add method '{method_file}': {e}")
-            return -1         
-        
-    def add_batch(self, access_token: str) -> int:
-        """
-        Creates a new batch entry in Directus and returns its ID.
+            blank = Blank(
+                blank_name=self.blank_name.get(),
+                blank_position=self.blank_position.get(),
+                blank_pre=int(self.blank_pre.get()),
+                blank_post=int(self.blank_post.get()),
+            )
+            print("Blank:", blank)
+            mass_spectrometry = MassSpectrometry(
+                rack_columns=int(self.rack_columns.get()),
+                rack_rows=int(self.rack_rows.get()),
+                instrument_id=self.instrument_id.get(),
+                operator_initials=self.operator_initials.get(),
+                injection_volume=int(self.injection_volume.get()),
+                batch_key=int(self.batch_key.get()),
+                data_path=self.data_path.get(),
+                output_path=self.output_path.get(),
+                standby_file=self.standby_file.get(),
+            )
+            print("Mass Spectrometry:", mass_spectrometry)
+            methods = Methods(
+                method_files=self.method_files.get(),
+                method_keys=[1, 2, 3],
+            )
+            print("Methods:", methods)
+            directus_credentials = DirectusCredentials(
+                username=self.directus_username.get(),
+                password=self.directus_password.get(),
+            )
+            print("Directus Credentials:", directus_credentials)
 
-        Args:
-            access_token (str): The JWT access token for authentication.
+        except ValueError as e:
+            messagebox.showerror("Invalid input", f"Invalid input: {e}")
+            return None
 
-        Returns:
-            int: The Directus ID of the created batch, or -1 if it failed.
-        """
-        session = requests.Session()
-        session.headers.update({
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        })
+    # def show_values(self, clicked_button: str) -> None:
+    #     print(18)
+    #     """
+    #     Stores all the parameters entered by the user into the environment variables
+    #     and launches the connection test to Directus.
 
-        # Extract future code to possibly create
-        url = "https://emi-collection.unifr.ch/directus/items/Batches"
-        column = "batch_id"
-        params: Dict[str, Union[str, int, float, None]] = {"sort[]": f"-{column}", "limit": 1}
-        session = requests.Session()
-        response = session.get(url, params=params)
-        last_value = response.json()["data"][0][column] if response.json()["data"] else "null"
-        last_number = int(last_value.split("_")[1]) if last_value != "null" else 0
-        first_number = last_number + 1
-        self.new_batch = "batch_" f"{first_number:06d}" 
+    #     Args:
+    #         clicked_button (str): A string ("new" or "csv") that defines which window
+    #                               will be launched after the home page.
 
-        # Fetch batches of type 6
-        params = {"sort[]": f"{column}", "filter[batch_type][_eq]": 6}
-        response = session.get(url, params=params)
-        data = response.json()["data"]
+    #     Returns:
+    #         None
+    #     """
 
-        # Create a mapping dictionary and list of options for the dropdown
-        batch_mapping = {f"New ({self.new_batch})": 0}  # "new" maps to ID 0
-        batch_names = ["Select a batch"]  # Add a placeholder for no default selection
-        batch_names.append(f"New ({self.new_batch})")  # Add "new batch" option
+    #     self.update_vars_from_inputs()
+    #     self.clicked_button = clicked_button
 
-        for item in data:
-            batch_mapping[item[column]] = item["id"]  # Map batch_id to id
-            batch_names.append(item[column])  # Add human-readable batch_id to the dropdown
+    #     # Proceed to test the connection to Directus
+    #     self.testConnection()
 
-        payload = {
-            "batch_id": self.new_batch,
-            "batch_type": 6,
-            "short_description": "ms batch",
-            "description": "ms batch",
-        }
+    # def testConnection(self) -> None:
+    #     print(20)
+    #     """
+    #     Tests if the connection to Directus is successful after checking all necessary arguments.
 
-        try:
-            response = session.post(url=url, json=payload)
-            response.raise_for_status()
-            return int(response.json()["data"]["id"])
-        except requests.RequestException as e:
-            print(f"Failed to create batch: {e}")
-            return -1
-        
-    def manage_choice(self, root: tk.Tk) -> None:
-        """
-        Launches the next window depending on the user's selected action: "new" or "csv".
-        """
-        self.label.config(text="Connect to Directus and adjust the parameters", foreground="black")
+    #     If all parameters are valid, it tries to authenticate with Directus and stores the access token.
 
-        if self.clicked_button == "new":
-            new_batch_window = tk.Toplevel(root)
-            new_batch_window.title("Create new batch")
-            new_batch_instance = newBatch(new_batch_window)  
-            new_batch_instance.pack(fill="both", expand=True)
+    #     Returns:
+    #         None
+    #     """
+    #     # Retrieve values from environment variables
+    #     user_data = self.validate_data()
+    #     print("User data:", user_data)  # Debug print
 
-        elif self.clicked_button == "csv":
-            csv_batch_window = tk.Toplevel(root)
-            csv_batch_window.minsize(300, 200)
-            csv_batch_window.title("Import CSV batch")
-            csv_batch_instance = csvBatch(csv_batch_window, root)
-            csv_batch_instance.pack(fill="both", expand=True)
-            
-        else:
-            self.label.config(text="Unknown error, please try again with other parameters", foreground="red")
+    #     # If all required values are present, attempt the connection
+    #     if self.validate_data(user_data):
+    #         self.attempt_connection(user_data)
+    #     else:
+    #         self.label.config(text="Please provide all values / valid values", foreground="red")
 
+    # def attempt_connection(self, user_data: dict) -> None:
+    #     print(23)
+    #     """
+    #     Attempts to connect to Directus using the provided user data.
 
-class AskBoxPrefixWindow(tk.Frame):
-    def __init__(self, root: tk.Toplevel):
-        """
-        Initializes an instance of the class.
+    #     If the connection is successful, the access token is stored.
 
-        Args:
-            root(tk.Toplevel): The parent widget or window where this frame will be placed.
-            csv_path(str): CSV path and name.
+    #     Args:
+    #         user_data (dict): The dictionary containing the necessary user data.
 
-        Returns:
-            None
-        """
-        tk.Frame.__init__(self, root)
+    #     Returns:
+    #         None
+    #     """
+    #     # Get the instrument key based on the ms_id
+    #     instrument_key = self.get_instrument_key(user_data["ms_id"])
+    #     self.session_data.instrument_key = instrument_key
 
-        self.prefix = tk.StringVar()
+    #     # Store the instrument key in the environment if valid
+    #     if instrument_key != -1:
+    #         os.environ["INSTRUMENT_KEY"] = str(self.session_data.instrument_key)
 
-        # Adjust the window size
-        root.geometry("300x150")
+    #         # Define the Directus base URL
+    #         base_url = "https://emi-collection.unifr.ch/directus"
+    #         login_url = base_url + "/auth/login"
 
-        # Label + textbox to enter prefix
-        label_prefix = tk.Label(self, text="Box's prefix:")
-        label_prefix.pack()
+    #         # Create a session object for making requests
+    #         session = requests.Session()
 
-        entry_prefix = tk.Entry(self, textvariable=self.prefix)
-        self.prefix.set("G:")
-        entry_prefix.pack()
+    #         # Recover connection identifiers from dataclass
+    #         username = default_vars.directus_username
+    #         password = default_vars.directus_password
 
-        # set the cursor to the prefix entry
-        entry_prefix.focus_set()
+    #         # Send a POST request to login
+    #         response = session.post(login_url, json={"email": username, "password": password})
 
-        # Submit button
-        button_submit = ttk.Button(self, text="Submit", command=self.store_prefix)
-        button_submit.pack()
+    #         if response.status_code == 200:
+    #             self.handle_successful_login(response.json())
+    #         else:
+    #             self.label.config(text="Connection to Directus failed, verify your credentials", foreground="red")
+    #     else:
+    #         self.label.config(text="Invalid instrument key, please verify your MS_ID", foreground="red")
 
-    def store_prefix(self) -> None:
-        """
-        Puts the asked prefix to the environment.
+    # def get_instrument_key(self, ms_id: str) -> int:
+    #     print(24)
+    #     """
+    #     Retrieves the primary key of the instrument based on the MS_ID.
 
-        Args:
-            None
+    #     Args:
+    #         ms_id (str): The mass spectrometer ID.
 
-        Returns:
-            None
-        """
-        os.environ["PREFIX"] = self.prefix.get()
+    #     Returns:
+    #         int: The instrument key, or -1 if not found.
+    #     """
+    #     ms_id = default_vars.instrument_id
+    #     return utils.get_primary_key(
+    #         "https://emi-collection.unifr.ch/directus/items/Instruments", ms_id, "instrument_id"
+    #     )
 
-        # Close the AskBoxPrefixWindow
-        self.master.destroy()
+    # def handle_successful_login(self, data: dict) -> None:
+    #     print(25)
+    #     """
+    #     Handles the actions after a successful login to Directus.
+
+    #     Args:
+    #         data (dict): The response data containing the access token.
+
+    #     Returns:
+    #         None
+    #     """
+    #     self.session_data.access_token = data["data"]["access_token"]
+    #     os.environ["ACCESS_TOKEN"] = self.session_data.access_token
+
+    #     selected_batch_label = self.batch_combobox.get()
+    #     batch = self.batch_mapping.get(selected_batch_label, -1)
+    #     print("Selected batch:", selected_batch_label)
+    #     print("Mapped batch ID:", batch)
+
+    #     if batch == "__NEW__":
+    #         batch = self.add_batch(self.session_data.access_token)
+
+    #     if batch in (-1, 0):
+    #         self.label.config(text="Invalid batch, please check the batch key.", foreground="red")
+    #         return
+
+    #     self.session_data.batch_key = batch
+    #     default_vars.batch_key = batch
+    #     os.environ["BATCH_KEY"] = str(self.session_data.batch_key)
+
+    #     method_keys = []
+    #     all_success = True
+
+    #     # Attempt to add each method file
+    #     for method_file in default_vars.method_files:
+    #         key = self.add_method(self.session_data.access_token, method_file)
+    #         if key == -1:
+    #             all_success = False
+    #         method_keys.append(key)
+
+    #     # If all methods were successfully added, store the method keys
+    #     if all_success:
+    #         self.session_data.method_keys = method_keys
+    #         os.environ["INJECTION_METHOD_KEYS"] = ",".join(map(str, self.session_data.method_keys))
+    #         self.manage_choice(self.root)
+    #     else:
+    #         self.label.config(text="One or more methods could not be added.", foreground="red")
+
+    # def add_method(self, access_token: str, method_file: str) -> int:
+    #     print(26)
+    #     """
+    #     Adds an injection method to Directus and returns its ID if successful.
+
+    #     If the method already exists, fetches its ID instead of failing.
+
+    #     Args:
+    #         access_token (str): The JWT access token for authentication.
+    #         method_file (str): The name of the method to add.
+
+    #     Returns:
+    #         int: The Directus ID of the method, or -1 if it failed completely.
+    #     """
+
+    #     session = requests.Session()
+    #     session.headers.update({"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"})
+
+    #     base_url = "https://emi-collection.unifr.ch/directus"
+    #     method_name = Path(method_file).stem
+    #     payload = {"method_name": method_name}
+
+    #     try:
+    #         # Try posting the new method
+    #         response = session.post(f"{base_url}/items/Injection_Methods/", json=payload)
+    #         response.raise_for_status()
+    #         return int(response.json()["data"]["id"])
+
+    #     except requests.HTTPError as e:
+    #         # If error 400 (conflict): method probably already present
+    #         if e.response is not None and e.response.status_code == 400:
+    #             print(f"Method '{method_name}' already exists, trying to fetch existing ID...")
+
+    #             # Try to retrieve it using a GET request with a filter
+    #             get_response = session.get(
+    #                 f"{base_url}/items/Injection_Methods", params={"filter[method_name][_eq]": method_name}
+    #             )
+    #             if get_response.ok:
+    #                 data = get_response.json().get("data")
+    #                 if data:
+    #                     return int(data[0]["id"])
+    #                 else:
+    #                     print(f"Method '{method_name}' not found even though it was expected.")
+    #         else:
+    #             print(f"Failed to add method '{method_file}': {e}")
+    #             if e.response is not None:
+    #                 print("Response content:", e.response.text)
+
+    #     return -1
+
+    # def add_batch(self, access_token: str) -> str:
+    #     print(27)
+    #     """
+    #     Creates a new batch entry in Directus and returns its ID.
+
+    #     Args:
+    #         access_token (str): The JWT access token for authentication.
+
+    #     Returns:
+    #         str: The Directus UUID of the created batch, or "" if it failed.
+    #     """
+    #     session = requests.Session()
+    #     session.headers.update({"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"})
+
+    #     # Get next batch number
+    #     url = "https://emi-collection.unifr.ch/directus/items/Batches"
+    #     column = "batch_id"
+    #     params = {"sort[]": f"-{column}", "limit": 1}
+    #     response = session.get(url, params=params)
+    #     json_data = response.json()
+    #     last_value: str = json_data["data"][0][column] if json_data["data"] else "null"
+    #     last_number = int(last_value.split("_")[1]) if last_value != "null" else 0
+    #     first_number = last_number + 1
+    #     self.new_batch = f"batch_{first_number:06d}"
+
+    #     # Fetch batches of type 6
+    #     params = {"sort[]": f"{column}", "filter[batch_type][_eq]": 6}
+    #     response = session.get(url, params=params)
+    #     data = response.json()["data"]
+
+    #     # Create a mapping dictionary and list of options for the dropdown
+    #     batch_mapping = {f"New ({self.new_batch})": 0}  # "new" maps to ID 0
+    #     batch_names = ["Select a batch"]  # Add a placeholder for no default selection
+    #     batch_names.append(f"New ({self.new_batch})")  # Add "new batch" option
+
+    #     for item in data:
+    #         batch_id = item[column]  # column = "batch_id"
+    #         directus_id = item["id"]
+    #         batch_mapping[batch_id] = directus_id
+    #         batch_names.append(batch_id)
+
+    #     self.batch_mapping = batch_mapping
+
+    #     payload = {
+    #         "batch_id": self.new_batch,
+    #         "batch_type": 6,
+    #         "short_description": "ms batch",
+    #         "description": "ms batch",
+    #     }
+
+    #     try:
+    #         response = session.post(url=url, json=payload)
+    #         response.raise_for_status()
+    #         return int(response.json()["data"]["id"])
+    #     except requests.RequestException as e:
+    #         print(f"Failed to create batch: {e}")
+    #         return ""
+
+    # def manage_choice(self, root: tk.Tk) -> None:
+    #     print(28)
+
+    #     """
+    #     Launches the next window depending on the user's selected action: "new" or "csv".
+    #     """
+    #     print("manage_choice called")
+    #     self.label.config(text="Connect to Directus and adjust the parameters", foreground="black")
+
+    #     user_data = self.get_user_data()
+
+    #     # Check that all data is valid
+    #     if not self.are_all_values_present(user_data):
+    #         self.label.config(text="Données manquantes ou invalides. Vérifiez tous les champs.", foreground="red")
+    #         return
+
+    #     if self.clicked_button == "new":
+    #         new_batch_window = tk.Toplevel(root)
+    #         new_batch_window.title("Create new batch")
+    #         new_batch_instance = newBatch(new_batch_window, session_data=self.session_data)
+    #         new_batch_instance.pack(fill="both", expand=True)
+
+    #     elif self.clicked_button == "csv":
+    #         csv_batch_window = tk.Toplevel(root)
+    #         csv_batch_window.minsize(300, 200)
+    #         csv_batch_window.title("Import CSV batch")
+    #         csv_batch_instance = csvBatch(csv_batch_window, root)
+    #         csv_batch_instance.pack(fill="both", expand=True)
+
+    #     else:
+    #         self.label.config(text="Unknown error, please try again with other parameters", foreground="red")

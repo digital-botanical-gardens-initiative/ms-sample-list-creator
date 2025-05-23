@@ -24,6 +24,7 @@ pandas-stubs = "^2.0.3"
 mypy = "^1.5.1"
 pre-commit = "^3.4.0"
 tox = "^4.11.1"
+flake8-todo = "^0.7"
 
 
 

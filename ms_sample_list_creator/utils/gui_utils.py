@@ -1,14 +1,12 @@
-import tkinter as tk
-from tkinter import ttk
-from typing import Tuple, List, Dict, Callable, Optional, Union, Any
-from tkinter import filedialog
 import os
+import tkinter as tk
+from tkinter import filedialog, ttk
+from typing import Callable, List, Optional, Tuple, Union
 
 import requests
 
 from ..implementations.list_var import ListVar
 from ..structure import Batch
-from ..home import HomeWindow
 
 
 def get_batches() -> List[Batch]:
@@ -27,10 +25,7 @@ def get_batches() -> List[Batch]:
         data = response.json()["data"]
         batches = []
         for item in data:
-            batch = Batch(
-                name=item["batch_id"],
-                identifier=item["id"]
-            )
+            batch = Batch(name=item["batch_id"], identifier=item["id"])
             batches.append(batch)
         return batches
     except requests.RequestException as e:
@@ -38,52 +33,53 @@ def get_batches() -> List[Batch]:
         return []
 
 
- # def refresh_batch_list(self) -> None:
-    #     print(7)
-    #     """
-    #     Refresh the list of batches from Directus and update the combobox.
-    #     Includes a "new batch" option with the correct next batch number.
-    #     """
+# def refresh_batch_list(self) -> None:
+#     print(7)
+#     """
+#     Refresh the list of batches from Directus and update the combobox.
+#     Includes a "new batch" option with the correct next batch number.
+#     """
 
-    #     try:
-    #         batches = utils.get_existing_batches()
-    #         print("Batches récupérés :", batches)
-    #     except requests.HTTPError as e:
-    #         messagebox.showerror("Erreur", f"Impossible de récupérer les batchs : {e}")
-    #         return
-    #     except Exception as e:
-    #         messagebox.showerror("Erreur", f"Erreur inattendue : {e}")
-    #         return
+#     try:
+#         batches = utils.get_existing_batches()
+#         print("Batches récupérés :", batches)
+#     except requests.HTTPError as e:
+#         messagebox.showerror("Erreur", f"Impossible de récupérer les batchs : {e}")
+#         return
+#     except Exception as e:
+#         messagebox.showerror("Erreur", f"Erreur inattendue : {e}")
+#         return
 
-    #     existing_numbers = []
-    #     for b in batches:
-    #         try:
-    #             if b["name"].startswith("batch_"):
-    #                 num = int(b["name"].split("_")[1])
-    #                 existing_numbers.append(num)
-    #         except Exception as e:
-    #             print(f"Error during batch extraction : {e}")
-    #             continue
+#     existing_numbers = []
+#     for b in batches:
+#         try:
+#             if b["name"].startswith("batch_"):
+#                 num = int(b["name"].split("_")[1])
+#                 existing_numbers.append(num)
+#         except Exception as e:
+#             print(f"Error during batch extraction : {e}")
+#             continue
 
-    #     next_batch_number = max(existing_numbers, default=0) + 1
+#     next_batch_number = max(existing_numbers, default=0) + 1
 
-    #     new_batch_label = f"batch_{next_batch_number:06d} (new batch)"
+#     new_batch_label = f"batch_{next_batch_number:06d} (new batch)"
 
-    #     # Mapping affichage -> id Directus
-    #     self.batch_mapping = {new_batch_label: "__NEW__"}
-    #     for b in batches:
-    #         self.batch_mapping[b["name"]] = b["id"]
+#     # Mapping affichage -> id Directus
+#     self.batch_mapping = {new_batch_label: "__NEW__"}
+#     for b in batches:
+#         self.batch_mapping[b["name"]] = b["id"]
 
-    #     values = ["Select a batch", new_batch_label] + [b["name"] for b in batches]
-    #     self.batch_combobox["values"] = values
-    #     self.batch_key.set("Select a batch")
+#     values = ["Select a batch", new_batch_label] + [b["name"] for b in batches]
+#     self.batch_combobox["values"] = values
+#     self.batch_key.set("Select a batch")
 
-    #     # Print pour debug
-    #     print("Batch mapping :")
-    #     for label, directus_id in self.batch_mapping.items():
-    #         print(f"  {label} -> {directus_id}")
+#     # Print pour debug
+#     print("Batch mapping :")
+#     for label, directus_id in self.batch_mapping.items():
+#         print(f"  {label} -> {directus_id}")
 
-    #     self.batch_combobox.bind("<<ComboboxSelected>>", self.on_batch_selected)
+#     self.batch_combobox.bind("<<ComboboxSelected>>", self.on_batch_selected)
+
 
 def create_label_input_pair(
     parent: ttk.Widget,
@@ -137,19 +133,10 @@ def create_label_input_pair(
 
     if left_type == "combobox":
         left_widget: Union[ttk.Entry, ttk.Combobox] = ttk.Combobox(
-            frame_left,
-            textvariable=left_var,
-            values=left_values or [],
-            state="readonly",
-            width=combobox_width
+            frame_left, textvariable=left_var, values=left_values or [], state="readonly", width=combobox_width
         )
     else:
-        left_widget = ttk.Entry(
-            frame_left,
-            textvariable=left_var,
-            width=entry_width,
-            show=show_left
-        )
+        left_widget = ttk.Entry(frame_left, textvariable=left_var, width=entry_width, show=show_left)
     left_widget.pack(anchor="w", pady=(2, 0))
     if left_default is not None:
         left_var.set(left_default)
@@ -162,44 +149,42 @@ def create_label_input_pair(
 
     if right_type == "combobox":
         right_widget: Union[ttk.Entry, ttk.Combobox] = ttk.Combobox(
-            frame_right,
-            textvariable=right_var,
-            values=right_values or [],
-            state="readonly",
-            width=combobox_width
+            frame_right, textvariable=right_var, values=right_values or [], state="readonly", width=combobox_width
         )
     else:
-        right_widget = ttk.Entry(
-            frame_right,
-            textvariable=right_var,
-            width=entry_width,
-            show=show_right
-        )
+        right_widget = ttk.Entry(frame_right, textvariable=right_var, width=entry_width, show=show_right)
     right_widget.pack(anchor="w", pady=(2, 0))
     if right_default is not None:
         right_var.set(right_default)
 
     return left_widget, right_widget
 
-def select_element(button: ttk.Button, is_file: bool, variable: Union[tk.StringVar, ListVar], file_type: Optional[List[Tuple[str, str]]] = None) -> None:
-        # Check wether we want to select a file or a directory
-        if is_file:
-            path = filedialog.askopenfilename(filetypes=file_type)
-        else:
-            path = filedialog.askdirectory()
-        
-        # Check that we have a valid path
-        if path:
-            # Extract the base name of the path and set it as the button text
-            path_base = os.path.basename(path)
-            button.config(text=path_base)
-            variable.set(path)
 
-def build_method_section(self: HomeWindow) -> None:
+def select_element(
+    button: ttk.Button,
+    is_file: bool,
+    variable: Union[tk.StringVar, ListVar],
+    file_type: Optional[List[Tuple[str, str]]] = None,
+) -> None:
+    # Check wether we want to select a file or a directory
+    if is_file:
+        path = filedialog.askopenfilename(filetypes=file_type)
+    else:
+        path = filedialog.askdirectory()
+
+    # Check that we have a valid path
+    if path:
+        # Extract the base name of the path and set it as the button text
+        path_base = os.path.basename(path)
+        button.config(text=path_base)
+        variable.set(path)
+
+
+def build_method_section(self) -> None:
     # If section already exists, do not create it again
-    if hasattr(self, 'method_section_frame'):
-        return  
-    
+    if hasattr(self, "method_section_frame"):
+        return
+
     # Label for the method section
     method_section_frame = ttk.Frame(self)
     method_section_frame.pack(fill="x", pady=(7, 0))
@@ -225,11 +210,9 @@ def build_method_section(self: HomeWindow) -> None:
         method_button = ttk.Button(frame, text="Add method")
         method_button.pack(side="left", padx=5)
 
-        def on_select(self: HomeWindow) -> None: 
-            select_element(button=method_button,
-            is_file=True,
-            variable= self.method_files,
-            file_type=[("Method files", "*.meth")]
+        def on_select(self) -> None:
+            select_element(
+                button=method_button, is_file=True, variable=self.method_files, file_type=[("Method files", "*.meth")]
             )
 
             # Add new button add_method
@@ -242,44 +225,37 @@ def build_method_section(self: HomeWindow) -> None:
     # Start with one button
     create_selector()
 
-def build_standby_selector(self: HomeWindow) -> None:
+
+def build_standby_selector(self) -> None:
     standby_path_button = create_label_button_row(
-    parent=self,
-    label_text="Standby method file:",
-    button_text="Select Standby File",
-    command=lambda: select_element(
-        button=standby_path_button,
-        is_file=True,
-        variable=self.standby_file,  
-        file_type=[("methods", "*.meth")]
+        parent=self,
+        label_text="Standby method file:",
+        button_text="Select Standby File",
+        command=lambda: select_element(
+            button=standby_path_button, is_file=True, variable=self.standby_file, file_type=[("methods", "*.meth")]
+        ),
     )
-)
 
-def build_output_selector(self: HomeWindow) -> None:
+
+def build_output_selector(self) -> None:
     output_path_button = create_label_button_row(
-    parent=self,
-    label_text="Sample list directory:",
-    button_text="Select Output Folder",
-    command=lambda: select_element(
-        button=output_path_button,
-        is_file=False,
-        variable=self.output_path
+        parent=self,
+        label_text="Sample list directory:",
+        button_text="Select Output Folder",
+        command=lambda: select_element(button=output_path_button, is_file=False, variable=self.output_path),
     )
-)
-    
-def build_data_selector(self: HomeWindow) -> None:
-    data_path_button = create_label_button_row(
-    parent=self,
-    label_text="MS data directory:",
-    button_text="Select Data Folder",
-    command=lambda: select_element(
-        button=data_path_button,
-        is_file=False,
-        variable=self.data_path  
-    )
-)
 
-def build_submit_button(self: HomeWindow, command: Callable[[], None]) -> None:
+
+def build_data_selector(self) -> None:
+    data_path_button = create_label_button_row(
+        parent=self,
+        label_text="MS data directory:",
+        button_text="Select Data Folder",
+        command=lambda: select_element(button=data_path_button, is_file=False, variable=self.data_path),
+    )
+
+
+def build_submit_button(self, command: Callable[[], None]) -> None:
     frame_submit = ttk.Frame(self)
     frame_submit.pack(fill="x", pady=(50, 0), padx=10)
 
@@ -294,6 +270,7 @@ def build_submit_button(self: HomeWindow, command: Callable[[], None]) -> None:
         command=command,
     )
     button_new_batch.pack(side="left", padx=(0, 5))
+
 
 def create_label_button_row(
     parent: ttk.Widget,

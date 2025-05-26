@@ -1,7 +1,8 @@
-from typing import List, Callable
+from typing import Callable, List
+
 
 class ListVar:
-    def __init__(self, initial: List[str]=[]):
+    def __init__(self, initial: List[str] = []):
         self._value = initial
         self._callbacks: List[Callable[[], None]] = []
 

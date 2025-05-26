@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import ttk
 
+
 class AskBoxPrefixWindow(tk.Frame):
     def __init__(self, root: tk.Toplevel):
         print(29)

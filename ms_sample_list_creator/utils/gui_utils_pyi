@@ -23,17 +23,6 @@ def create_label_input_pair(
     show_right: str = ...,
 ) -> Tuple[Union[ttk.Entry, ttk.Combobox], Union[ttk.Entry, ttk.Combobox]]: ...
 
-
-
-def select_element(
-    self,
-    button: ttk.Button,
-    is_file: bool,
-    variable: tk.StringVar,
-    is_method: bool = ...,
-    file_type: Optional[List[Tuple[str, str]]] = ...
-) -> None: ...
-
 def build_method_section(self) -> None: ...
 
 def build_standby_selector(self) -> None: ...

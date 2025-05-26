@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
-from typing import Any
+from tkinter.ttk import Combobox
+from typing import Any, Dict, Optional, cast
+
+import requests
 
 from .implementations.list_var import ListVar
 
@@ -45,7 +48,7 @@ class HomeWindow(ttk.Frame):
         self.batch_key = tk.StringVar()
 
         # File paths
-        self.method_files: ListVar = ListVar()
+        self.method_files: ListVar = ListVar([])
         self.standby_file = tk.StringVar(
             value="/home/heloise/repositories/ms-sample-list-creator/tests_files/stdby.meth"
         )
@@ -67,8 +70,8 @@ class HomeWindow(ttk.Frame):
         self.rack_columns = tk.StringVar(value=str(9))
         self.rack_rows = tk.StringVar(value=str(6))
 
-        # Batches
-        # batches = gui_utils.get_batches(self)
+        # Batch mapping for the combobox
+        self.batch_mapping: Dict[str, int] = {}
 
         self.build_gui()
 
@@ -129,19 +132,23 @@ class HomeWindow(ttk.Frame):
         )
 
         # Injection volume and batch
-        self.batch_list = ["Test1", "Test2", "Test3"]
-        gui_utils.create_label_input_pair(
+        _, self.batch_combobox = gui_utils.create_label_input_pair(
             parent=self,
             left_label_text="Injection Volume (µL):",
             right_label_text="Batch:",
             left_var=self.injection_volume,
             right_var=self.batch_key,
             right_type="combobox",
-            right_values=self.batch_list,  # TODO change to the real batch list
+            right_values=[],  # Empty for now
         )
 
-        # Call to fill in the choices
-        gui_utils.get_batches()
+        # Load batches from directus into the combobox
+        gui_utils.get_batches(
+            batch_combobox=cast(Combobox, self.batch_combobox),
+            batch_key=self.batch_key,
+            on_batch_selected=self.on_batch_selected,
+            set_mapping=lambda mapping: setattr(self, "batch_mapping", mapping),
+        )
 
         # Create a frame for each section
         gui_utils.build_method_section(self)
@@ -149,6 +156,25 @@ class HomeWindow(ttk.Frame):
         gui_utils.build_data_selector(self)
         gui_utils.build_output_selector(self)
         gui_utils.build_submit_button(self, self.validate_data)
+
+    def on_batch_selected(self, event: Optional[tk.Event] = None) -> None:
+        """
+        Called when a batch is selected in the batch Combobox.
+        Updates the selected batch ID or handles creation of a new batch.
+        """
+        selected_label = self.batch_combobox.get()
+        selected_id = self.batch_mapping.get(selected_label)
+
+        print(f"Selected batch: {selected_label} -> {selected_id}")
+
+        if selected_label == "Select a batch":
+            self.label.config(text="Please select a batch.")
+            self.batch_key.set("")
+        elif selected_id == "__NEW__":
+            self.label.config(text="You selected a new batch")  # TODO : handle creation of a new batch
+        else:
+            self.label.config(text="")
+            self.batch_key.set(str(selected_id))
 
     def validate_data(self) -> None:
         try:
@@ -182,91 +208,76 @@ class HomeWindow(ttk.Frame):
             )
             print("Directus Credentials:", directus_credentials)
 
+            self.attempt_connection()
+
         except ValueError as e:
             messagebox.showerror("Invalid input", f"Invalid input: {e}")
             return None
 
-    # def show_values(self, clicked_button: str) -> None:
-    #     print(18)
-    #     """
-    #     Stores all the parameters entered by the user into the environment variables
-    #     and launches the connection test to Directus.
+    def attempt_connection(self) -> None:
+        """
+        Attempts to connect to Directus using the provided user data.
 
-    #     Args:
-    #         clicked_button (str): A string ("new" or "csv") that defines which window
-    #                               will be launched after the home page.
+        If the connection is successful, the access token is stored.
 
-    #     Returns:
-    #         None
-    #     """
+        Args:
+            user_data (dict): The dictionary containing the necessary user data.
 
-    #     self.update_vars_from_inputs()
-    #     self.clicked_button = clicked_button
+        Returns:
+            None
+        """
+        # # Get the instrument key based on the ms_id
+        # instrument_key = self.get_instrument_key(user_data["ms_id"])
+        # self.session_data.instrument_key = instrument_key
 
-    #     # Proceed to test the connection to Directus
-    #     self.testConnection()
+        # # Store the instrument key in the environment if valid
+        # if instrument_key != -1:
+        #     os.environ["INSTRUMENT_KEY"] = str(self.session_data.instrument_key)
 
-    # def testConnection(self) -> None:
-    #     print(20)
-    #     """
-    #     Tests if the connection to Directus is successful after checking all necessary arguments.
+        #     # Define the Directus base URL
+        #     base_url = "https://emi-collection.unifr.ch/directus"
+        #     login_url = base_url + "/auth/login"
 
-    #     If all parameters are valid, it tries to authenticate with Directus and stores the access token.
+        #     # Create a session object for making requests
+        #     session = requests.Session()
 
-    #     Returns:
-    #         None
-    #     """
-    #     # Retrieve values from environment variables
-    #     user_data = self.validate_data()
-    #     print("User data:", user_data)  # Debug print
+        #     # Recover connection identifiers from dataclass
+        #     username = default_vars.directus_username
+        #     password = default_vars.directus_password
 
-    #     # If all required values are present, attempt the connection
-    #     if self.validate_data(user_data):
-    #         self.attempt_connection(user_data)
-    #     else:
-    #         self.label.config(text="Please provide all values / valid values", foreground="red")
+        #     # Send a POST request to login
+        #     response = session.post(login_url, json={"email": username, "password": password})
 
-    # def attempt_connection(self, user_data: dict) -> None:
-    #     print(23)
-    #     """
-    #     Attempts to connect to Directus using the provided user data.
+        #     if response.status_code == 200:
+        #         self.handle_successful_login(response.json())
+        #     else:
+        #         self.label.config(text="Connection to Directus failed, verify your credentials", foreground="red")
+        # else:
+        #     self.label.config(text="Invalid instrument key, please verify your MS_ID", foreground="red")
 
-    #     If the connection is successful, the access token is stored.
+        base_url = "https://emi-collection.unifr.ch/directus"
+        login_url = base_url + "/auth/login"
 
-    #     Args:
-    #         user_data (dict): The dictionary containing the necessary user data.
+        session = requests.Session()
 
-    #     Returns:
-    #         None
-    #     """
-    #     # Get the instrument key based on the ms_id
-    #     instrument_key = self.get_instrument_key(user_data["ms_id"])
-    #     self.session_data.instrument_key = instrument_key
+        # Get Directus credentials from the dataclass
+        username = self.directus_username.get()
+        password = self.directus_password.get()
 
-    #     # Store the instrument key in the environment if valid
-    #     if instrument_key != -1:
-    #         os.environ["INSTRUMENT_KEY"] = str(self.session_data.instrument_key)
+        try:
+            response = session.post(login_url, json={"email": username, "password": password})
+            response.raise_for_status()
 
-    #         # Define the Directus base URL
-    #         base_url = "https://emi-collection.unifr.ch/directus"
-    #         login_url = base_url + "/auth/login"
+            # If connection is successful
+            self.handle_successful_login(response.json())
 
-    #         # Create a session object for making requests
-    #         session = requests.Session()
+        except requests.HTTPError as e:
+            self.label.config(text="Connection to Directus failed, verify your credentials", foreground="red")
+            print(f"HTTPError during Directus login: {e}")
 
-    #         # Recover connection identifiers from dataclass
-    #         username = default_vars.directus_username
-    #         password = default_vars.directus_password
-
-    #         # Send a POST request to login
-    #         response = session.post(login_url, json={"email": username, "password": password})
-
-    #         if response.status_code == 200:
-    #             self.handle_successful_login(response.json())
-    #         else:
-    #             self.label.config(text="Connection to Directus failed, verify your credentials", foreground="red")
-    #     else:
-    #         self.label.config(text="Invalid instrument key, please verify your MS_ID", foreground="red")
+        except requests.RequestException as e:
+            self.label.config(text="Network error during connection to Directus", foreground="red")
+            print(f"RequestException during Directus login: {e}")
 
     # def get_instrument_key(self, ms_id: str) -> int:
     #     print(24)
@@ -284,17 +295,18 @@ class HomeWindow(ttk.Frame):
     #         "https://emi-collection.unifr.ch/directus/items/Instruments", ms_id, "instrument_id"
     #     )
 
-    # def handle_successful_login(self, data: dict) -> None:
-    #     print(25)
-    #     """
-    #     Handles the actions after a successful login to Directus.
+    def handle_successful_login(self, data: dict) -> None:
+        print(25)
+        """
+        Handles the actions after a successful login to Directus.
 
-    #     Args:
-    #         data (dict): The response data containing the access token.
+        Args:
+            data (dict): The response data containing the access token.
 
-    #     Returns:
-    #         None
-    #     """
+        Returns:
+            None
+        """
+
     #     self.session_data.access_token = data["data"]["access_token"]
     #     os.environ["ACCESS_TOKEN"] = self.session_data.access_token
 

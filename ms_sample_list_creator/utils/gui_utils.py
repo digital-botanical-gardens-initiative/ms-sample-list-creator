@@ -5,67 +5,12 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple, TypeVar
 import requests
 
 from ms_sample_list_creator.utils.file_system_utils import select_element
+from ms_sample_list_creator.structure import Batch
 
 if TYPE_CHECKING:
     from ms_sample_list_creator.home import HomeWindow
 
 Self = TypeVar("Self", bound="HomeWindow")
-
-
-def get_batches(
-    batch_combobox: ttk.Combobox,
-    batch_key: tk.Variable,
-    on_batch_selected: Callable,
-    set_mapping: Callable[[Dict[str, str]], None],
-) -> None:
-    """
-    Fetches batches from Directus and populates the Combobox.
-    Includes a '(new batch)' entry with the next available batch number.
-    """
-
-    url = "https://emi-collection.unifr.ch/directus/items/Batches?filter[batch_type][_eq]=6&fields=batch_id,id"
-    headers = {"Content-Type": "application/json"}
-    params = {"sort[]": "batch_id"}
-
-    try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()["data"]
-    except requests.RequestException as e:
-        print(f"Error fetching batches: {e}")
-        exit()
-
-    batches = []
-    existing_numbers = []
-
-    for item in data:
-        name = item.get("batch_id", "")
-        identifier = item.get("id", "")
-        batches.append((name, identifier))
-
-        if name.startswith("batch_"):
-            try:
-                number = int(name.split("_")[1])
-                existing_numbers.append(number)
-            except (IndexError, ValueError) as e:
-                print(f"Error parsing batch number from '{name}': {e}")
-
-    next_batch_number = max(existing_numbers, default=0) + 1
-    new_batch_label = f"batch_{next_batch_number:06d} (new batch)"
-
-    # Build display label -> Directus ID mapping
-    batch_mapping = {new_batch_label: "__NEW__"}
-    for name, identifier in batches:
-        batch_mapping[name] = identifier
-
-    set_mapping(batch_mapping)
-
-    values = ["Select a batch", new_batch_label] + [name for name, _ in batches]
-    batch_combobox["values"] = values
-    batch_key.set("Select a batch")
-
-    batch_combobox.bind("<<ComboboxSelected>>", on_batch_selected)
-
 
 def create_label_input_pair(
     parent: ttk.Widget,

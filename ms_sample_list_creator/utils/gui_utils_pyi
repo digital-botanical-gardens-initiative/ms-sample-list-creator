@@ -4,6 +4,7 @@ from typing import Optional, Callable, Tuple, List, Dict, Union
 
 def get_batches() -> Dict[str, int]: ...
 
+def get_instruments() -> Dict[str, str]: ...
 
 def create_label_input_pair(
     parent: ttk.Widget,

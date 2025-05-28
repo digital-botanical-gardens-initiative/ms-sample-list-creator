@@ -1,6 +1,15 @@
 from dataclasses import dataclass
 from typing import List
 
+@dataclass
+class Instrument:
+    name: str
+    identifier: int
+
+@dataclass
+class Batch:
+    name: str
+    identifier: int
 
 @dataclass
 class Blank:
@@ -9,37 +18,32 @@ class Blank:
     blank_pre: int
     blank_post: int
 
-
 @dataclass
-class Batch:
+class Method:
     name: str
     identifier: int
 
+@dataclass
+class Path:
+    methods: List[Method]
+    standby: str
+    data: str
+    output: str
+
+@dataclass
+class Rack:
+    column: int
+    row: int
 
 @dataclass
 class MassSpectrometry:
-    rack_columns: int
-    rack_rows: int
-    instrument_id: str
     operator_initials: str
     injection_volume: int
-    batch_key: int
-    data_path: str
-    output_path: str
-    standby_file: str
-
-
-@dataclass
-class Methods:
-    method_files: List[str]
-    method_keys: List[int]
-
 
 @dataclass
 class DirectusCredentials:
     username: str
     password: str
-
 
 @dataclass
 class SampleData:

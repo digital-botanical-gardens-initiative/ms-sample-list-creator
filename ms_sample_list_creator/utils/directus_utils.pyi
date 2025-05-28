@@ -1,0 +1,16 @@
+from typing import Dict, List
+
+from ms_sample_list_creator.implementations.result import Result
+from ms_sample_list_creator.structure import Batch, DirectusCredentials, Method
+
+
+
+def get_batches() -> Dict[str, int]: ...
+
+def get_instruments() -> Dict[str, str]: ...
+
+def test_credentials(credentials: DirectusCredentials) -> Result[str, str]: ...
+
+def test_batch(batch: Batch, token: str) -> Result[Batch, str]: ...
+
+def get_methods(method: str, token: str) -> List[Method]: ...

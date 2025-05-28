@@ -1,16 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple, TypeVar, Union
-
-import requests
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, TypeVar, Union
 
 from ms_sample_list_creator.utils.file_system_utils import select_element
-from ms_sample_list_creator.structure import Batch
 
 if TYPE_CHECKING:
     from ms_sample_list_creator.home import HomeWindow
 
 Self = TypeVar("Self", bound="HomeWindow")
+
 
 def create_label_input_pair(
     parent: ttk.Widget,
@@ -107,7 +105,7 @@ def build_method_section(self: Self) -> None:
     method_select_frame = ttk.Frame(method_section_frame)
     method_select_frame.pack(fill="x")
 
-    def create_selector(after_frame: Optional[ttk.Frame] = None) -> ttk.Frame:
+    def create_selector(self: Self, after_frame: Optional[ttk.Frame] = None) -> ttk.Frame:
         frame = ttk.Frame(method_select_frame)
         # Pack under the frame if it exists
         if after_frame is not None:
@@ -123,18 +121,21 @@ def build_method_section(self: Self) -> None:
 
         def on_select(self: Self) -> None:
             select_element(
-                button=method_button, is_file=True, variable=self.method_files, file_type=[("Method files", "*.meth")]
+                button=method_button,
+                is_file=True,
+                variable=self.method_list_path,
+                file_type=[("Method files", "*.meth")],
             )
 
             # Add new button add_method
-            create_selector(after_frame=frame)
+            create_selector(self, after_frame=frame)
 
         method_button.config(command=lambda: on_select(self))
 
         return frame
 
     # Start with one button
-    create_selector()
+    create_selector(self)
 
 
 def build_standby_selector(self: Self) -> None:

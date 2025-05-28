@@ -3,6 +3,7 @@ from typing import Generic, TypeVar, Union
 T = TypeVar("T")
 E = TypeVar("E")
 
+
 class Result(Generic[T, E]):
     def __init__(self, value: Union[T, None] = None, error: Union[E, None] = None):
         self.value = value

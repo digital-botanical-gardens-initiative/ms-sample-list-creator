@@ -1,5 +1,4 @@
 import tkinter as tk
-from pathlib import Path
 from tkinter import messagebox, ttk
 from typing import Any, Dict, List, Optional
 
@@ -9,18 +8,13 @@ from ms_sample_list_creator.implementations.result import Result
 from ms_sample_list_creator.structure import (
     Batch,
     Blank,
-    DirectusCredentials,
     Instrument,
     MassSpectrometry,
-    Method,
-    Rack,
 )
 from ms_sample_list_creator.utils.directus_utils import (
     get_batches,
     get_instruments,
-    get_methods,
     test_batch,
-    test_credentials,
 )
 from ms_sample_list_creator.utils.gui_utils import (
     build_data_selector,
@@ -236,7 +230,7 @@ class HomeWindow(ttk.Frame):
 
     def validate_data(self) -> None:
         try:
-            #-------------Credentials------------------#
+            # -------------Credentials------------------#
 
             # # Get directus credentials
             # directus_credentials = DirectusCredentials(
@@ -253,7 +247,7 @@ class HomeWindow(ttk.Frame):
 
             # access_token = cred_result.value
 
-            #-------------MS------------------#
+            # -------------MS------------------#
 
             mass_spectrometry = MassSpectrometry(
                 operator_initials=self.operator_initials.get(),
@@ -261,15 +255,15 @@ class HomeWindow(ttk.Frame):
             )
             print("Mass Spectrometry:", mass_spectrometry)
 
-            #-------------Instrument------------------#
+            # -------------Instrument------------------#
 
             instrument = Instrument(name=self.instrument_name.get(), identifier=self.instrument_id.get())
 
             if instrument.identifier < 1:
                 messagebox.showerror("No instrument", "Please select an instrument")
                 return
-            
-            #-------------Batch------------------#
+
+            # -------------Batch------------------#
 
             # Check that batch is valid
             batch = Batch(name=self.batch_name.get(), identifier=self.batch_id.get())
@@ -283,7 +277,7 @@ class HomeWindow(ttk.Frame):
             # Update batch if it was updated
             batch = batch_result.value
 
-            #-------------Blank------------------#
+            # -------------Blank------------------#
 
             blank = Blank(
                 blank_name=self.blank_name.get(),
@@ -292,8 +286,6 @@ class HomeWindow(ttk.Frame):
                 blank_post=int(self.blank_post.get()),
             )
             print("Blank:", blank)
-
-
 
             # meth_result: Result = get_methods(methods_list=self.method_list_path.get(), token=access_token)
 
@@ -315,7 +307,6 @@ class HomeWindow(ttk.Frame):
             #     row=self.rack_rows.get(),
             # )
             # print("Rack:", rack)
-            
 
         except ValueError as e:
             messagebox.showerror("Invalid input", f"Invalid input: {e}")
@@ -361,24 +352,24 @@ class HomeWindow(ttk.Frame):
     # def manage_choice(self, root: tk.Tk) -> None:
     #     print(28)
 
-        # """
-        # Launches the next window depending on the user's selected action: "new" or "csv".
-        # """
-        # print("manage_choice called")
-        # self.label.config(text="Connect to Directus and adjust the parameters", foreground="black")
+    # """
+    # Launches the next window depending on the user's selected action: "new" or "csv".
+    # """
+    # print("manage_choice called")
+    # self.label.config(text="Connect to Directus and adjust the parameters", foreground="black")
 
-        # user_data = self.get_user_data()
+    # user_data = self.get_user_data()
 
-        # # Check that all data is valid
-        # if not self.are_all_values_present(user_data):
-        #     self.label.config(text="Données manquantes ou invalides. Vérifiez tous les champs.", foreground="red")
-        #     return
+    # # Check that all data is valid
+    # if not self.are_all_values_present(user_data):
+    #     self.label.config(text="Données manquantes ou invalides. Vérifiez tous les champs.", foreground="red")
+    #     return
 
-        # if self.clicked_button == "new":
-        #     new_batch_window = tk.Toplevel(root)
-        #     new_batch_window.title("Create new batch")
-        #     new_batch_instance = newBatch(new_batch_window, session_data=self.session_data)
-        #     new_batch_instance.pack(fill="both", expand=True)
+    # if self.clicked_button == "new":
+    #     new_batch_window = tk.Toplevel(root)
+    #     new_batch_window.title("Create new batch")
+    #     new_batch_instance = newBatch(new_batch_window, session_data=self.session_data)
+    #     new_batch_instance.pack(fill="both", expand=True)
 
-        # else:
-        #     self.label.config(text="Unknown error, please try again with other parameters", foreground="red")
+    # else:
+    #     self.label.config(text="Unknown error, please try again with other parameters", foreground="red")

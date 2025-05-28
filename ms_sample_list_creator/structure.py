@@ -44,6 +44,7 @@ class Path:
     standby: str
     data: str
     output: str
+
     def __post_init__(self):
         if not self.methods:
             raise ValueError("Please select at least one method")
@@ -59,6 +60,7 @@ class Path:
 class Rack:
     column: int
     row: int
+
     def __post_init__(self):
         if self.column < 1:
             raise ValueError("Please select a valid number of columns")
@@ -70,6 +72,7 @@ class Rack:
 class MassSpectrometry:
     operator_initials: str
     injection_volume: int
+
     def __post_init__(self):
         if not self.operator_initials:
             raise ValueError("Please enter operator initials")
@@ -81,11 +84,13 @@ class MassSpectrometry:
 class DirectusCredentials:
     username: str
     password: str
+
     def __post_init__(self):
         if not self.username:
             raise ValueError("Please enter username")
         if not self.password:
             raise ValueError("Please enter password")
+
 
 @dataclass
 class SampleData:

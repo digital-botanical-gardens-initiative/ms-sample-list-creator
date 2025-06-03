@@ -2,18 +2,24 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import Any, Dict, List, Optional
 
+from ms_sample_list_creator.implementations.list_var import ListVar
 from ms_sample_list_creator.implementations.result import Result
-
-# from .new_sample_list import newBatch
+from ms_sample_list_creator.sample_list import SampleList
 from ms_sample_list_creator.structure import (
     Batch,
     Blank,
+    DirectusCredentials,
     Instrument,
     MassSpectrometry,
+    Method,
+    ProjectPath,
+    Rack,
 )
 from ms_sample_list_creator.utils.directus_utils import (
     get_batches,
     get_instruments,
+    get_methods,
+    login_to_directus,
     test_batch,
 )
 from ms_sample_list_creator.utils.gui_utils import (
@@ -24,8 +30,6 @@ from ms_sample_list_creator.utils.gui_utils import (
     build_submit_button,
     create_label_input_pair,
 )
-
-from .implementations.list_var import ListVar
 
 
 class HomeWindow(ttk.Frame):
@@ -57,8 +61,8 @@ class HomeWindow(ttk.Frame):
         # Blank information
         self.blank_pre = tk.StringVar(value=str(4))
         self.blank_post = tk.StringVar(value=str(3))
-        self.blank_name = tk.StringVar(value="blank")
-        self.blank_position = tk.StringVar(value="G:A1")
+        self.blank_name = tk.StringVar()
+        self.blank_position = tk.StringVar()
 
         # Batch information
         self.batch_name = tk.StringVar()
@@ -66,27 +70,25 @@ class HomeWindow(ttk.Frame):
 
         # File paths
         self.method_list_path: ListVar = ListVar([])
-        self.standby_path = tk.StringVar(
-            value="/home/heloise/repositories/ms-sample-list-creator/tests_files/stdby.meth"
-        )
-        self.output_path = tk.StringVar(value="/home/heloise/repositories/ms-sample-list-creator")
-        self.data_path = tk.StringVar(value="/home/heloise/repositories/ms-sample-list-creator")
+        self.standby_path = tk.StringVar()
+        self.output_path = tk.StringVar()
+        self.data_path = tk.StringVar()
 
         # Directus credentials
-        self.directus_username = tk.StringVar(value="test.user@gmail.com")
-        self.directus_password = tk.StringVar(value="test")
+        self.directus_username = tk.StringVar()
+        self.directus_password = tk.StringVar()
 
         # Operator
-        self.operator_initials = tk.StringVar(value="CVOL")
+        self.operator_initials = tk.StringVar()
 
         # Mass spectrometer ID
         self.instrument_name = tk.StringVar()
         self.instrument_id = tk.IntVar()
 
         # Injection volume
-        self.injection_volume = tk.StringVar(value=str(1))
-        self.rack_columns = tk.StringVar(value=str(9))
-        self.rack_rows = tk.StringVar(value=str(6))
+        self.injection_volume = tk.DoubleVar(value=1.0)
+        self.rack_columns = tk.IntVar(value=9)
+        self.rack_rows = tk.IntVar(value=6)
 
         # Batch and instrument mapping for the combobox
         self.batch_mapping: Dict[str, int] = {}
@@ -157,7 +159,16 @@ class HomeWindow(ttk.Frame):
         )
 
         # Load instruments from directus
-        instruments: List[Instrument] = get_instruments()
+        instrument_result = get_instruments()
+
+        if not instrument_result.is_ok:
+            messagebox.showerror("Instruments loading", instrument_result.error)
+            return
+        instruments = instrument_result.value
+
+        if not isinstance(instruments, list):
+            messagebox.showerror("Instruments loading", "No instruments found.")
+            return
 
         # Create instruments list
         instrument_values = []
@@ -169,12 +180,27 @@ class HomeWindow(ttk.Frame):
 
         # Set instruments
         self.instrument_combobox["values"] = instrument_values
+        if isinstance(self.instrument_combobox, ttk.Combobox):
+            self.instrument_combobox.set("Select an instrument")
+        else:
+            self.instrument_combobox.delete(0, tk.END)
+            self.instrument_combobox.insert(0, "Select an instrument")
 
         # Set select listener
         self.instrument_combobox.bind("<<ComboboxSelected>>", self.on_instrument_selected)
 
         # Load batches from directus
-        batches: List[Batch] = get_batches()
+        batches_result = get_batches()
+
+        if not batches_result.is_ok:
+            messagebox.showerror("Batches loading", batches_result.error)
+            return
+
+        if not isinstance(batches_result.value, list):
+            messagebox.showerror("Batches loading", "No batches found.")
+            return
+
+        batches = batches_result.value
 
         # Create batches list
         batch_values = []
@@ -186,7 +212,11 @@ class HomeWindow(ttk.Frame):
 
         # Set batches
         self.batch_combobox["values"] = batch_values
-        self.batch_combobox.set("test")
+        if isinstance(self.batch_combobox, ttk.Combobox):
+            self.batch_combobox.set("Select a batch")
+        else:
+            self.batch_combobox.delete(0, tk.END)
+            self.batch_combobox.insert(0, "Select a batch")
 
         # Set select listener
         self.batch_combobox.bind("<<ComboboxSelected>>", self.on_batch_selected)
@@ -207,9 +237,11 @@ class HomeWindow(ttk.Frame):
         selected_label = self.instrument_combobox.get()
         selected_id = self.instrument_mapping.get(selected_label, -1)
 
-        print(f"Selected instrument: {selected_label}, ID: {selected_id}")
-
-        self.instrument_combobox.set(selected_label)
+        if isinstance(self.instrument_combobox, ttk.Combobox):
+            self.instrument_combobox.set(selected_label)
+        else:
+            self.instrument_combobox.delete(0, tk.END)
+            self.instrument_combobox.insert(0, selected_label)
 
         self.instrument_name.set(selected_label)
         self.instrument_id.set(selected_id)
@@ -223,8 +255,6 @@ class HomeWindow(ttk.Frame):
         selected_label = self.batch_combobox.get()
         selected_id = self.batch_mapping.get(selected_label, -1)
 
-        print(f"Selected batch: {selected_label}, ID: {selected_id}")
-
         self.batch_name.set(selected_label)
         self.batch_id.set(selected_id)
 
@@ -232,28 +262,27 @@ class HomeWindow(ttk.Frame):
         try:
             # -------------Credentials------------------#
 
-            # # Get directus credentials
-            # directus_credentials = DirectusCredentials(
-            #     username=self.directus_username.get(),
-            #     password=self.directus_password.get(),
-            # )
+            # Get directus credentials
+            credentials = DirectusCredentials(
+                username=self.directus_username.get(),
+                password=self.directus_password.get(),
+            )
 
-            # # check that credentials are valid
-            # cred_result: Result = test_credentials(directus_credentials)
+            # check that credentials are valid
+            cred_result: Result = login_to_directus(credentials)
 
-            # if not cred_result.is_ok:
-            #     messagebox.showerror("Directus connection", cred_result.error)
-            #     return
+            if not cred_result.is_ok:
+                messagebox.showerror("Directus connection", cred_result.error)
+                return
 
-            # access_token = cred_result.value
+            access_token = str(cred_result.value)
 
             # -------------MS------------------#
 
             mass_spectrometry = MassSpectrometry(
                 operator_initials=self.operator_initials.get(),
-                injection_volume=int(self.injection_volume.get()),
+                injection_volume=self.injection_volume.get(),
             )
-            print("Mass Spectrometry:", mass_spectrometry)
 
             # -------------Instrument------------------#
 
@@ -274,6 +303,10 @@ class HomeWindow(ttk.Frame):
                 messagebox.showerror("Batch validation", batch_result.error)
                 return
 
+            if not batch_result.value:
+                messagebox.showerror("Batch validation", "Batch not found or invalid.")
+                return
+
             # Update batch if it was updated
             batch = batch_result.value
 
@@ -285,91 +318,103 @@ class HomeWindow(ttk.Frame):
                 blank_pre=int(self.blank_pre.get()),
                 blank_post=int(self.blank_post.get()),
             )
-            print("Blank:", blank)
 
-            # meth_result: Result = get_methods(methods_list=self.method_list_path.get(), token=access_token)
+            # -------------Methods------------------#
 
-            # if not meth_result.is_ok:
-            #     messagebox.showerror("Method validation", meth_result.error)
-            #     return
+            if not self.method_list_path.get():
+                messagebox.showerror("Method validation", "Please select at least one method file.")
+                return
 
-            # methods: Method = meth_result.value
+            meth_result: Result = get_methods(methods_list=self.method_list_path.get(), token=access_token)
 
-            # path = Path(
-            #     methods=methods,
-            #     standby=self.standby_path.get(),
-            #     data=self.data_path.get(),
-            #     output=self.output_path.get(),
-            # )
-            # print("Path:", path)
-            # rack = Rack(
-            #     column=self.rack_columns.get(),
-            #     row=self.rack_rows.get(),
-            # )
-            # print("Rack:", rack)
+            if not meth_result.is_ok:
+                messagebox.showerror("Method validation", meth_result.error)
+                return
+
+            if not isinstance(meth_result.value, list):
+                messagebox.showerror("Method validation", "No methods found or invalid format.")
+                return
+
+            methods: List[Method] = meth_result.value
+
+            # -------------ProjectPath------------------#
+
+            paths = ProjectPath(
+                methods=methods,
+                standby=self.standby_path.get(),
+                data=self.data_path.get(),
+                output=self.output_path.get(),
+            )
+
+            # -------------Rack------------------#
+
+            rack = Rack(
+                column=self.rack_columns.get(),
+                row=self.rack_rows.get(),
+            )
+
+            # -------------Launch the sample list creation------------------#
+            self.lauch_sample_list_creation(
+                access_token=access_token,
+                credentials=credentials,
+                mass_spectrometry=mass_spectrometry,
+                instrument=instrument,
+                batch=batch,
+                blank=blank,
+                paths=paths,
+                methods=methods,
+                rack=rack,
+            )
 
         except ValueError as e:
             messagebox.showerror("Invalid input", f"Invalid input: {e}")
             return None
+        # except Exception as e:
+        #     messagebox.showerror("Unexpected error", str(e))
+        #     return None
 
-    # def handle_successful_login(self, data: dict) -> None:
-    #     print("handle_successful_login called")
-    #     """
-    #     Handles the actions after a successful login to Directus.
+    def lauch_sample_list_creation(
+        self,
+        access_token: str,
+        credentials: DirectusCredentials,
+        mass_spectrometry: MassSpectrometry,
+        instrument: Instrument,
+        batch: Batch,
+        blank: Blank,
+        methods: List[Method],
+        paths: ProjectPath,
+        rack: Rack,
+    ) -> None:
+        """
+        Launches the sample list creation process with the provided parameters.
 
-    #     Args:
-    #         data (dict): The response data containing the access token.
+        Args:
+            access_token (str): The access token for Directus.
+            credentials (DirectusCredentials): The Directus credentials.
+            mass_spectrometry (MassSpectrometry): The mass spectrometry parameters.
+            instrument (Instrument): The selected instrument.
+            batch (Batch): The selected batch.
+            blank (Blank): The blank parameters.
+            methods (List[Method]): The list of methods to be used.
+            paths (ProjectPath): The project paths for standby, data, and output.
+            rack (Rack): The rack configuration.
 
-    #     Returns:
-    #         None
-    #     """
+        Returns:
+            None
+        """
 
-    #     selected_batch_label = self.batch_combobox.get()
-
-    #     batch_id = self.add_batch(self.access_token) if selected_batch_label == "__NEW__" else selected_batch_label
-
-    #     print(batch_id)
-
-    #     if batch_id in (-1, 0):
-    #         self.label.config(text="Invalid batch, please check the batch key.", foreground="red")
-    #         return
-
-    #     # Attempt to add each method file
-    #     method_keys: List[int] = []
-    #     all_success = True
-    #     for method_file in self.method_list_path.get():
-    #         key = self.add_method(self.access_token, method_file)
-    #         if key == -1:
-    #             all_success = False
-    #         method_keys.append(key)
-
-    #     if all_success:
-    #         self.method_keys = method_keys
-    #         self.manage_choice(self.root)
-    #     else:
-    #         self.label.config(text="No method could be added (or all already existed).", foreground="red")
-
-    # def manage_choice(self, root: tk.Tk) -> None:
-    #     print(28)
-
-    # """
-    # Launches the next window depending on the user's selected action: "new" or "csv".
-    # """
-    # print("manage_choice called")
-    # self.label.config(text="Connect to Directus and adjust the parameters", foreground="black")
-
-    # user_data = self.get_user_data()
-
-    # # Check that all data is valid
-    # if not self.are_all_values_present(user_data):
-    #     self.label.config(text="Données manquantes ou invalides. Vérifiez tous les champs.", foreground="red")
-    #     return
-
-    # if self.clicked_button == "new":
-    #     new_batch_window = tk.Toplevel(root)
-    #     new_batch_window.title("Create new batch")
-    #     new_batch_instance = newBatch(new_batch_window, session_data=self.session_data)
-    #     new_batch_instance.pack(fill="both", expand=True)
-
-    # else:
-    #     self.label.config(text="Unknown error, please try again with other parameters", foreground="red")
+        sample_list_window = tk.Toplevel(self)
+        sample_list_window.title("Create Sample List")
+        sample_list_instance = SampleList(
+            sample_list_window,
+            access_token=access_token,
+            credentials=credentials,
+            mass_spectrometry=mass_spectrometry,
+            instrument=instrument,
+            batch=batch,
+            blank=blank,
+            paths=paths,
+            methods=methods,
+            rack=rack,
+        )
+        sample_list_instance.pack(fill="both", expand=True)

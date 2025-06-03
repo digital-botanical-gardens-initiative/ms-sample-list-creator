@@ -1,4 +1,6 @@
-from typing import Generic, TypeVar, Union
+from typing import Generic, Optional, TypeVar, Union
+
+from ms_sample_list_creator.implementations.result_exception import ResultException
 
 T = TypeVar("T")
 E = TypeVar("E")
@@ -17,12 +19,12 @@ class Result(Generic[T, E]):
     def is_err(self) -> bool:
         return self.error is not None
 
-    def unwrap(self) -> T:
+    def unwrap(self) -> Optional[T]:
         if self.is_ok:
             return self.value
-        raise Exception(f"Called unwrap on error: {self.error}")
+        raise ResultException(f"Called unwrap on error: {self.error}")
 
-    def unwrap_err(self) -> E:
+    def unwrap_err(self) -> Optional[E]:
         if self.is_err:
             return self.error
-        raise Exception("Called unwrap_err on a valid result")
+        raise ResultException("Called unwrap_err on a valid result")

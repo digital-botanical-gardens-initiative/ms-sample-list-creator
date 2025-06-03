@@ -2,15 +2,11 @@ import csv
 import tkinter as tk
 from datetime import datetime
 from tkinter import messagebox, ttk
-from typing import List, Optional, Tuple, Union, cast
+from typing import List, Optional, cast
 
 from dotenv import load_dotenv
 
-# Loads .env variables
-load_dotenv() # TODO: Remove this after testing
-
-import requests
-
+from ms_sample_list_creator.askboxprefixwindow import AskBoxPrefixWindow
 from ms_sample_list_creator.structure import (
     Batch,
     Blank,
@@ -22,12 +18,13 @@ from ms_sample_list_creator.structure import (
     Rack,
     SampleContainer,
     SampleData,
-    SampleListData
+    SampleListData,
 )
-
 from ms_sample_list_creator.utils.directus_utils import get_aliquot, insert_ms_sample
 
-from ms_sample_list_creator.askboxprefixwindow import AskBoxPrefixWindow
+# Loads .env variables
+load_dotenv()  # TODO: Remove this after testing
+
 
 class SampleList(ttk.Frame):
     """
@@ -47,8 +44,8 @@ class SampleList(ttk.Frame):
         blank: Blank,
         methods: List[Method],
         paths: ProjectPath,
-        rack: Rack
-        ) -> None:
+        rack: Rack,
+    ) -> None:
         """
         Initializes an instance of the class.
 
@@ -71,8 +68,6 @@ class SampleList(ttk.Frame):
         self.post_blank: List[SampleListData] = []
         self.standby: List[SampleListData] = []
 
-
-
         # Make variables accessible inside the class
         self.root = parent
         self.window = parent
@@ -91,7 +86,6 @@ class SampleList(ttk.Frame):
 
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        
         # Add internal counters for the rack position
         self.current_row: int = 1
         self.current_position: int = 1
@@ -105,7 +99,7 @@ class SampleList(ttk.Frame):
         input fields for sample data, and buttons for adding samples
         and submitting the list.
         """
-        
+
         # Setup treeview for displaying samples
         self.treeview = ttk.Treeview(self)
         self.treeview.pack(fill="both", expand=True, padx=10, pady=10)
@@ -123,8 +117,8 @@ class SampleList(ttk.Frame):
             "Inj Vol",
             "Batch",
         )
-        self.tree["columns"] = columns # Set the columns for the treeview
-        self.tree["show"] = "headings" # Put headings on the top
+        self.tree["columns"] = columns  # Set the columns for the treeview
+        self.tree["show"] = "headings"  # Put headings on the top
 
         # Configure each column
         for col in columns:
@@ -170,13 +164,12 @@ class SampleList(ttk.Frame):
         parent_sample = cast(SampleContainer, parent_sample_result.value)
 
         try:
-
             sample = SampleData(
-                parent_sample_container = parent_sample,
-                injection_volume = self.mass_spectrometry.injection_volume,
-                injection_methods = self.paths.methods,
-                instrument = self.instrument,
-                batch = self.batch
+                parent_sample_container=parent_sample,
+                injection_volume=self.mass_spectrometry.injection_volume,
+                injection_methods=self.paths.methods,
+                instrument=self.instrument,
+                batch=self.batch,
             )
 
         except ValueError as e:
@@ -185,8 +178,10 @@ class SampleList(ttk.Frame):
                 str(e),
             )
             return
-        
-        insertion_result = insert_ms_sample(token=self.token, timestamp=self.timestamp, operator=self.mass_spectrometry.operator_initials, sample=sample)
+
+        insertion_result = insert_ms_sample(
+            token=self.token, timestamp=self.timestamp, operator=self.mass_spectrometry.operator_initials, sample=sample
+        )
 
         if not insertion_result.is_ok:
             messagebox.showerror(
@@ -194,7 +189,7 @@ class SampleList(ttk.Frame):
                 insertion_result.error,
             )
             return
-        
+
         # Insert the sample into the treeview
         self.insert_into_treeview()
 
@@ -202,9 +197,11 @@ class SampleList(ttk.Frame):
         self.maybe_ask_prefix()
         position = self.generate_rack_position()
         aliquot_id = self.aliquot_id_entry.get().strip()
-        
+
         for method in self.methods:
-            filename = self.timestamp + "_" + self.mass_spectrometry.operator_initials + "_" + method.name + "_" + aliquot_id
+            filename = (
+                self.timestamp + "_" + self.mass_spectrometry.operator_initials + "_" + method.name + "_" + aliquot_id
+            )
             item_id = self.tree.insert(
                 "",
                 "end",
@@ -217,15 +214,13 @@ class SampleList(ttk.Frame):
                     method.name,
                     position,
                     self.mass_spectrometry.injection_volume,
-                    self.batch.name
+                    self.batch.name,
                 ),
             )
             self.tree.see(item_id)
-    
+
     def maybe_ask_prefix(self) -> None:
-        if (self.current_position > self.rack.column) or (
-            self.current_position == 1 and self.current_row == 1
-        ):
+        if (self.current_position > self.rack.column) or (self.current_position == 1 and self.current_row == 1):
             ask_prefix_window = tk.Toplevel(self.window)
             ask_prefix_window.title("Add Prefix")
 
@@ -252,7 +247,6 @@ class SampleList(ttk.Frame):
         return position
 
     def submit_table(self) -> None:
-    
         if not self.treeview.get_children():
             messagebox.showerror("Error", "No data to export!")
             return
@@ -267,7 +261,7 @@ class SampleList(ttk.Frame):
         self.export_csv()
 
     def build_samples_from_treeview(self) -> None:
-        """ Builds the list of samples from the treeview data."""
+        """Builds the list of samples from the treeview data."""
         self.samples.clear()
         self.blk_sample.clear()
 
@@ -282,16 +276,15 @@ class SampleList(ttk.Frame):
                 rack_position=values[6],
                 injection_volume=float(values[7]),
             )
-            
+
             if "blk" in aliquot_id:
                 self.blk_sample.append(sample)
             else:
                 self.samples.append(sample)
-            
-    def add_pre_blanks(self) -> None:
 
+    def add_pre_blanks(self) -> None:
         for i in range(self.blank.blank_pre):
-            # Construction of the blank name 
+            # Construction of the blank name
             blank_name = f"{self.blank.blank_name}_pre_{i+1}"
 
             for method in self.methods:
@@ -299,7 +292,7 @@ class SampleList(ttk.Frame):
                 pre_blank_sample = SampleListData(
                     sample_name=blank_name,
                     path=self.paths.data.replace("/", "\\"),
-                    method_file= method.name,
+                    method_file=method.name,
                     rack_position=self.blank.blank_position,
                     injection_volume=self.mass_spectrometry.injection_volume,
                 )
@@ -308,7 +301,6 @@ class SampleList(ttk.Frame):
                 self.pre_blank.append(pre_blank_sample)
 
     def add_post_blanks(self) -> None:
-
         for i in range(self.blank.blank_post):
             blank_name = f"{self.blank.blank_name}_post_{i+1}"
 
@@ -316,7 +308,7 @@ class SampleList(ttk.Frame):
                 post_blank_sample = SampleListData(
                     sample_name=blank_name,
                     path=self.paths.data.replace("/", "\\"),
-                    method_file= method.name,
+                    method_file=method.name,
                     rack_position=self.blank.blank_position,
                     injection_volume=self.mass_spectrometry.injection_volume,
                 )
@@ -331,7 +323,7 @@ class SampleList(ttk.Frame):
             path=self.paths.data.replace("/", "\\"),
             method_file=self.paths.standby.replace("/", "\\"),
             rack_position=self.blank.blank_position,
-            injection_volume=self.mass_spectrometry.injection_volume
+            injection_volume=self.mass_spectrometry.injection_volume,
         )
         self.standby.append(standby_sample)
 
@@ -339,13 +331,7 @@ class SampleList(ttk.Frame):
         """Exports the sample list to a CSV file in the correct order."""
         try:
             # order the samples and blanks for the csv list
-            ordered_samples = (
-                self.pre_blank +
-                self.blk_sample +
-                self.samples +
-                self.post_blank +
-                self.standby
-            )
+            ordered_samples = self.pre_blank + self.blk_sample + self.samples + self.post_blank + self.standby
 
             if not ordered_samples:
                 messagebox.showwarning("No samples to export.")
@@ -355,19 +341,15 @@ class SampleList(ttk.Frame):
                 writer = csv.writer(file)
 
                 for row in ordered_samples:
-                    writer.writerow([
-                        row.sample_name,
-                        row.path,
-                        row.method_file,
-                        row.rack_position,
-                        row.injection_volume
-                    ])
+                    writer.writerow(
+                        [row.sample_name, row.path, row.method_file, row.rack_position, row.injection_volume]
+                    )
 
             messagebox.showinfo("Success", "Sample list correctly generated!")
 
         except Exception as e:
             messagebox.showerror("Error", f"Sample list couldn't be generated: {e}")
-    
+
     def on_exit(self) -> None:
         """
         Defines behaviour when user quits this window (by x button or specified button).

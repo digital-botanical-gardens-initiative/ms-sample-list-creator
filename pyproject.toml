@@ -19,6 +19,7 @@ pytest = "^7.2.0"
 pytest-cov = "^5.0.0"
 pandas = "^2.0.3"
 pandas-stubs = "^2.0.3"
+python-dotenv = "0.21.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.5.1"
@@ -86,6 +87,8 @@ ignore = [
     "E501",
     # DoNotAssignLambda
     "E731",
+    # Allow long error messages in raise statements
+    "TRY003",
 ]
 
 [tool.ruff.format]

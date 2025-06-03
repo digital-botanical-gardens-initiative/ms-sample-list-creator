@@ -1,11 +1,10 @@
-import os
 import tkinter as tk
 from tkinter import ttk
+from typing import Optional
 
 
 class AskBoxPrefixWindow(tk.Frame):
     def __init__(self, root: tk.Toplevel):
-        print(29)
         """
         Initializes an instance of the class.
 
@@ -19,6 +18,7 @@ class AskBoxPrefixWindow(tk.Frame):
         tk.Frame.__init__(self, root)
 
         self.prefix = tk.StringVar()
+        self.result: Optional[str] = None
 
         # Adjust the window size
         root.geometry("300x150")
@@ -39,7 +39,6 @@ class AskBoxPrefixWindow(tk.Frame):
         button_submit.pack()
 
     def store_prefix(self) -> None:
-        print(30)
         """
         Puts the asked prefix to the environment.
 
@@ -49,7 +48,8 @@ class AskBoxPrefixWindow(tk.Frame):
         Returns:
             None
         """
-        os.environ["PREFIX"] = self.prefix.get()
+
+        self.result = self.prefix.get()
 
         # Close the AskBoxPrefixWindow
         self.master.destroy()

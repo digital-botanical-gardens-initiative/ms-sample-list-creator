@@ -19,6 +19,6 @@ def select_element(
         button.config(text=path_base)
 
         if isinstance(variable, tk.StringVar):
-            variable.set(path)
+            variable.set(path_base)
         elif isinstance(variable, ListVar):
-            variable.add(path)
+            variable.add(path_base)

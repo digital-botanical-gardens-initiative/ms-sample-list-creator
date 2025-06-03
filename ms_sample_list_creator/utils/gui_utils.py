@@ -144,7 +144,7 @@ def build_standby_selector(self: Self) -> None:
         label_text="Standby method file:",
         button_text="Select Standby File",
         command=lambda: select_element(
-            button=standby_path_button, is_file=True, variable=self.standby_file, file_type=[("methods", "*.meth")]
+            button=standby_path_button, is_file=True, variable=self.standby_path, file_type=[("methods", "*.meth")]
         ),
     )
 

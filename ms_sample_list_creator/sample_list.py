@@ -1,10 +1,11 @@
 import csv
 import tkinter as tk
 from datetime import datetime
-from tkinter import messagebox, ttk
+from tkinter import messagebox
 from typing import List, Optional, cast
 
-from dotenv import load_dotenv
+import ttkbootstrap as tb
+from ttkbootstrap import ttk
 
 from ms_sample_list_creator.askboxprefixwindow import AskBoxPrefixWindow
 from ms_sample_list_creator.structure import (
@@ -22,9 +23,6 @@ from ms_sample_list_creator.structure import (
 )
 from ms_sample_list_creator.utils.directus_utils import get_aliquot, insert_ms_sample
 
-# Loads .env variables
-load_dotenv()  # TODO: Remove this after testing
-
 
 class SampleList(ttk.Frame):
     """
@@ -35,8 +33,8 @@ class SampleList(ttk.Frame):
 
     def __init__(
         self,
-        parent: tk.Toplevel,
-        access_token: str,
+        window: tk.Toplevel,
+        root: tk.Tk,
         credentials: DirectusCredentials,
         mass_spectrometry: MassSpectrometry,
         instrument: Instrument,
@@ -55,8 +53,7 @@ class SampleList(ttk.Frame):
         Returns:
             None
         """
-
-        super().__init__(parent)
+        super().__init__(window)
 
         # Store the prefix
         self.prefix: Optional[str] = None
@@ -69,9 +66,8 @@ class SampleList(ttk.Frame):
         self.standby: List[SampleListData] = []
 
         # Make variables accessible inside the class
-        self.root = parent
-        self.window = parent
-        self.token = access_token
+        self.window = window
+        self.root = root
         self.credentials = credentials
         self.mass_spectrometry = mass_spectrometry
         self.instrument = instrument
@@ -101,7 +97,7 @@ class SampleList(ttk.Frame):
         """
 
         # Setup treeview for displaying samples
-        self.treeview = ttk.Treeview(self)
+        self.treeview = tb.Treeview(self, bootstyle="secondary", show="headings")
         self.treeview.pack(fill="both", expand=True, padx=10, pady=10)
         self.tree = self.treeview
 
@@ -180,7 +176,7 @@ class SampleList(ttk.Frame):
             return
 
         insertion_result = insert_ms_sample(
-            token=self.token, timestamp=self.timestamp, operator=self.mass_spectrometry.operator_initials, sample=sample
+            timestamp=self.timestamp, operator=self.mass_spectrometry.operator_initials, sample=sample
         )
 
         if not insertion_result.is_ok:
@@ -211,7 +207,7 @@ class SampleList(ttk.Frame):
                     self.instrument.name,
                     filename,
                     self.paths.data.replace("/", "\\"),
-                    method.name,
+                    method.path.replace("/", "\\"),
                     position,
                     self.mass_spectrometry.injection_volume,
                     self.batch.name,
@@ -284,15 +280,15 @@ class SampleList(ttk.Frame):
 
     def add_pre_blanks(self) -> None:
         for i in range(self.blank.blank_pre):
-            # Construction of the blank name
-            blank_name = f"{self.blank.blank_name}_pre_{i+1}"
-
             for method in self.methods:
+                # Construction of the blank name
+                blank_name = f"{self.blank.blank_name}_pre_{i+1}_{method.name}"
+
                 # Create a SampleData with blank infos
                 pre_blank_sample = SampleListData(
                     sample_name=blank_name,
                     path=self.paths.data.replace("/", "\\"),
-                    method_file=method.name,
+                    method_file=method.path.replace("/", "\\"),
                     rack_position=self.blank.blank_position,
                     injection_volume=self.mass_spectrometry.injection_volume,
                 )
@@ -302,13 +298,13 @@ class SampleList(ttk.Frame):
 
     def add_post_blanks(self) -> None:
         for i in range(self.blank.blank_post):
-            blank_name = f"{self.blank.blank_name}_post_{i+1}"
-
             for method in self.methods:
+                blank_name = f"{self.blank.blank_name}_post_{i+1}_{method.name}"
+
                 post_blank_sample = SampleListData(
                     sample_name=blank_name,
                     path=self.paths.data.replace("/", "\\"),
-                    method_file=method.name,
+                    method_file=method.path.replace("/", "\\"),
                     rack_position=self.blank.blank_position,
                     injection_volume=self.mass_spectrometry.injection_volume,
                 )
@@ -347,6 +343,8 @@ class SampleList(ttk.Frame):
 
             messagebox.showinfo("Success", "Sample list correctly generated!")
 
+            self.on_exit()
+
         except Exception as e:
             messagebox.showerror("Error", f"Sample list couldn't be generated: {e}")
 
@@ -361,4 +359,5 @@ class SampleList(ttk.Frame):
             None
         """
         self.window.destroy()
-        self.root.deiconify()
+        if self.root.winfo_exists():
+            self.root.deiconify()

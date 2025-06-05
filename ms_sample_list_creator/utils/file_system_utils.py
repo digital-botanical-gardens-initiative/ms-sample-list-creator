@@ -9,9 +9,9 @@ from ms_sample_list_creator.implementations.list_var import ListVar
 def select_element(
     button: ttk.Button,
     is_file: bool,
-    variable: Union[ListVar, tk.StringVar],
+    variable: Optional[Union["ListVar", tk.StringVar]] = None,
     file_type: Optional[List[Tuple[str, str]]] = None,
-) -> None:
+) -> Optional[str]:
     path = filedialog.askopenfilename(filetypes=file_type) if is_file else filedialog.askdirectory()
 
     if path:
@@ -19,6 +19,8 @@ def select_element(
         button.config(text=path_base)
 
         if isinstance(variable, tk.StringVar):
-            variable.set(path_base)
+            variable.set(path)
         elif isinstance(variable, ListVar):
-            variable.add(path_base)
+            variable.add(path)
+
+        return path

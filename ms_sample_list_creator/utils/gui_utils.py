@@ -1,6 +1,8 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox
 from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, TypeVar, Union
+
+from ttkbootstrap import ttk
 
 from ms_sample_list_creator.utils.file_system_utils import select_element
 
@@ -105,6 +107,8 @@ def build_method_section(self: Self) -> None:
     method_select_frame = ttk.Frame(method_section_frame)
     method_select_frame.pack(fill="x")
 
+    selected_methods: List[str] = []
+
     def create_selector(self: Self, after_frame: Optional[ttk.Frame] = None) -> ttk.Frame:
         frame = ttk.Frame(method_select_frame)
         # Pack under the frame if it exists
@@ -120,12 +124,22 @@ def build_method_section(self: Self) -> None:
         method_button.pack(side="left", padx=5)
 
         def on_select(self: Self) -> None:
-            select_element(
+            file_path = select_element(
                 button=method_button,
                 is_file=True,
                 variable=self.method_list_path,
                 file_type=[("Method files", "*.meth")],
             )
+
+            if not file_path:
+                return
+
+            if file_path in selected_methods:
+                method_button.config(text="Add method")
+                messagebox.showinfo("Info", "This method has already been selected, please selected another one.")
+                return
+
+            selected_methods.append(file_path)
 
             # Add new button add_method
             create_selector(self, after_frame=frame)
@@ -177,7 +191,7 @@ def build_submit_button(self: ttk.Frame, command: Callable[[], None]) -> None:
     button_new_batch = ttk.Button(
         button_frame,
         text="Validate",
-        style="Success.TButton",
+        bootstyle="success",
         width=17,
         command=command,
     )

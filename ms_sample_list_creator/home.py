@@ -1,6 +1,8 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox
 from typing import Any, Dict, List, Optional
+
+from ttkbootstrap import ttk
 
 from ms_sample_list_creator.implementations.list_var import ListVar
 from ms_sample_list_creator.implementations.result import Result
@@ -15,11 +17,11 @@ from ms_sample_list_creator.structure import (
     ProjectPath,
     Rack,
 )
+from ms_sample_list_creator.token_manager import TokenManager, validate_credentials
 from ms_sample_list_creator.utils.directus_utils import (
     get_batches,
     get_instruments,
     get_methods,
-    login_to_directus,
     test_batch,
 )
 from ms_sample_list_creator.utils.gui_utils import (
@@ -269,13 +271,13 @@ class HomeWindow(ttk.Frame):
             )
 
             # check that credentials are valid
-            cred_result: Result = login_to_directus(credentials)
+            result = validate_credentials(credentials)
 
-            if not cred_result.is_ok:
-                messagebox.showerror("Directus connection", cred_result.error)
+            if not result.is_ok:
+                messagebox.showerror("Login Failed", f"Invalid Directus credentials :\n{result.error}")
                 return
 
-            access_token = str(cred_result.value)
+            TokenManager(credentials)
 
             # -------------MS------------------#
 
@@ -297,7 +299,7 @@ class HomeWindow(ttk.Frame):
             # Check that batch is valid
             batch = Batch(name=self.batch_name.get(), identifier=self.batch_id.get())
 
-            batch_result: Result = test_batch(batch, access_token)
+            batch_result: Result = test_batch(batch)
 
             if not batch_result.is_ok:
                 messagebox.showerror("Batch validation", batch_result.error)
@@ -325,7 +327,7 @@ class HomeWindow(ttk.Frame):
                 messagebox.showerror("Method validation", "Please select at least one method file.")
                 return
 
-            meth_result: Result = get_methods(methods_list=self.method_list_path.get(), token=access_token)
+            meth_result: Result = get_methods(methods_list=self.method_list_path.get())
 
             if not meth_result.is_ok:
                 messagebox.showerror("Method validation", meth_result.error)
@@ -355,7 +357,6 @@ class HomeWindow(ttk.Frame):
 
             # -------------Launch the sample list creation------------------#
             self.lauch_sample_list_creation(
-                access_token=access_token,
                 credentials=credentials,
                 mass_spectrometry=mass_spectrometry,
                 instrument=instrument,
@@ -369,13 +370,12 @@ class HomeWindow(ttk.Frame):
         except ValueError as e:
             messagebox.showerror("Invalid input", f"Invalid input: {e}")
             return None
-        # except Exception as e:
-        #     messagebox.showerror("Unexpected error", str(e))
-        #     return None
+        except Exception as e:
+            messagebox.showerror("Unexpected error", str(e))
+            return None
 
     def lauch_sample_list_creation(
         self,
-        access_token: str,
         credentials: DirectusCredentials,
         mass_spectrometry: MassSpectrometry,
         instrument: Instrument,
@@ -389,7 +389,6 @@ class HomeWindow(ttk.Frame):
         Launches the sample list creation process with the provided parameters.
 
         Args:
-            access_token (str): The access token for Directus.
             credentials (DirectusCredentials): The Directus credentials.
             mass_spectrometry (MassSpectrometry): The mass spectrometry parameters.
             instrument (Instrument): The selected instrument.
@@ -403,11 +402,13 @@ class HomeWindow(ttk.Frame):
             None
         """
 
+        self.root.withdraw()
+
         sample_list_window = tk.Toplevel(self)
         sample_list_window.title("Create Sample List")
         sample_list_instance = SampleList(
             sample_list_window,
-            access_token=access_token,
+            root=self.root,
             credentials=credentials,
             mass_spectrometry=mass_spectrometry,
             instrument=instrument,
@@ -417,4 +418,5 @@ class HomeWindow(ttk.Frame):
             methods=methods,
             rack=rack,
         )
-        sample_list_instance.pack(fill="both", expand=True)
+
+        sample_list_instance.pack(fill=tk.BOTH, expand=True)

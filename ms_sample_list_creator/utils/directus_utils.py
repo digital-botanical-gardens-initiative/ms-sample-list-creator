@@ -4,7 +4,8 @@ from typing import List
 import requests
 
 from ms_sample_list_creator.implementations.result import Result
-from ms_sample_list_creator.structure import Batch, DirectusCredentials, Instrument, Method, SampleContainer, SampleData
+from ms_sample_list_creator.structure import Batch, Instrument, Method, SampleContainer, SampleData
+from ms_sample_list_creator.token_manager import TokenManager
 
 
 def get_batches() -> Result[List[Batch], str]:
@@ -78,44 +79,12 @@ def get_instruments() -> Result[List[Instrument], str]:
     return Result(value=instruments)
 
 
-def login_to_directus(credentials: DirectusCredentials) -> Result[str, str]:  # TODO: Handle reconnection when time
-    """
-    Attempts to connect to Directus using the provided user data.
-
-    If the connection is successful, the access token is stored.
-
-    Args:
-        user_data (dict): The dictionary containing the necessary user data.
-
-    Returns:
-        None
-    """
-
-    base_url = "https://emi-collection.unifr.ch/directus"
-    login_url = base_url + "/auth/login"
-
-    try:
-        response = requests.post(
-            login_url, json={"email": credentials.username, "password": credentials.password}, timeout=10
-        )
-        response.raise_for_status()
-
-        return Result(value=response.json()["data"]["access_token"])
-
-    except requests.HTTPError as e:
-        return Result(error=f"HTTPError during Directus login: {e}")
-
-    except requests.RequestException as e:
-        return Result(error=f"RequestException during Directus login: {e}")
-
-
-def test_batch(batch: Batch, token: str) -> Result[Batch, str]:
+def test_batch(batch: Batch) -> Result[Batch, str]:
     """
     Check that batch exists in Directus. If not, create it.
 
     Args:
         batch (Batch): The batch to check
-        token (str): The directus token
     """
 
     if batch.identifier == -1:
@@ -126,7 +95,7 @@ def test_batch(batch: Batch, token: str) -> Result[Batch, str]:
 
     url = "https://emi-collection.unifr.ch/directus/items/Batches"
     params = {"sort[]": "-batch_id", "limit": 1}
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    headers = {"Authorization": f"Bearer {TokenManager().get_token()}", "Content-Type": "application/json"}
 
     session = requests.Session()
     session.headers.update(headers)
@@ -161,14 +130,13 @@ def test_batch(batch: Batch, token: str) -> Result[Batch, str]:
         return Result(error=f"Failed to create batch: {e}")
 
 
-def get_methods(methods_list: List[str], token: str) -> Result[List[Method], str]:
+def get_methods(methods_list: List[str]) -> Result[List[Method], str]:
     """
     Adds an injection method to Directus and returns its ID if successful.
 
     If the method already exists, fetches its ID instead of failing.
 
     Args:
-        access_token (str): The JWT access token for authentication.
         method_file (str): The name of the method to add.
 
     Returns:
@@ -177,9 +145,12 @@ def get_methods(methods_list: List[str], token: str) -> Result[List[Method], str
 
     base_url = "https://emi-collection.unifr.ch/directus/items/Injection_Methods"
     session = requests.Session()
-    session.headers.update({"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+    session.headers.update(
+        {"Authorization": f"Bearer {TokenManager().get_token()}", "Content-Type": "application/json"}
+    )
 
-    method_names = [PathlibPath(m).stem for m in methods_list]
+    method_paths = {PathlibPath(m).stem: m for m in methods_list}
+    method_names = list(method_paths.keys())
 
     params = {"filter[method_name][_in]": method_names}
 
@@ -188,11 +159,15 @@ def get_methods(methods_list: List[str], token: str) -> Result[List[Method], str
         response.raise_for_status()
         data = response.json().get("data", [])
     except requests.RequestException as e:
+        print(f"Failed to fetch existing methods: {e}")
         return Result(error=f"Failed to fetch existing methods: {e}")
 
     # Existing methods from Directus
     existing_methods = {
-        method["method_name"]: Method(name=method["method_name"], identifier=method["id"]) for method in data
+        method["method_name"]: Method(
+            name=method["method_name"], path=method_paths.get(method["method_name"]), identifier=method["id"]
+        )
+        for method in data
     }
 
     results: List[Method] = list(existing_methods.values())
@@ -205,7 +180,9 @@ def get_methods(methods_list: List[str], token: str) -> Result[List[Method], str
                 post_response = session.post(f"{base_url}", json=payload, timeout=10)
                 post_response.raise_for_status()
                 created = post_response.json()["data"]
-                method = Method(name=created["method_name"], identifier=created["id"])
+                method = Method(
+                    name=created["method_name"], path=method_paths.get(created["method_name"]), identifier=created["id"]
+                )
                 results.append(method)
             except requests.RequestException as e:
                 return Result(error=f"Failed to create method '{name}': {e}")
@@ -241,7 +218,7 @@ def get_aliquot(aliquot_id: str) -> Result[SampleContainer, str]:
     return Result(value=sample_container)
 
 
-def insert_ms_sample(token: str, timestamp: str, operator: str, sample: SampleData) -> Result[bool, str]:
+def insert_ms_sample(timestamp: str, operator: str, sample: SampleData) -> Result[bool, str]:
     payload = []
     for method in sample.injection_methods:
         filename = timestamp + "_" + operator + "_" + method.name + "_" + sample.parent_sample_container.name
@@ -257,13 +234,15 @@ def insert_ms_sample(token: str, timestamp: str, operator: str, sample: SampleDa
             }
         )
 
-    # url = "https://emi-collection.unifr.ch/directus/items/MS_Data"
-    # headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    # url = "https://emi-collection.unifr.ch/directus/items/MS_Datakjsdléjfasdj"
+    # headers = {"Authorization": f"Bearer {TokenManager().get_token()}", "Content-Type": "application/json"}
 
     try:
-        # TODO: Uncomment this for production use
-        # response = requests.post(url=url, json=payload, timeout=10, headers=headers)
-        # response.raise_for_status()
+        #     # TODO: Uncomment this for production use
+        #     response = requests.post(url=url, json=payload, timeout=10, headers=headers)
+        #     response.raise_for_status()
         return Result(value=True)
+    except requests.HTTPError as e:
+        return Result(error=f"HTTPError while inserting samples: {e}")
     except requests.RequestException as e:
-        return Result(error=f"Failed to insert samples: {e}")
+        return Result(error=f"RequestException while inserting samples: {e}")

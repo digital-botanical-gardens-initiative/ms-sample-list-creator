@@ -47,14 +47,14 @@ class Blank:
 @dataclass
 class Method:
     name: str
-    # path: str TODO: Add path after testing
+    path: str
     identifier: int
 
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("Please select a method")
-        # if not self.path:
-        #     raise ValueError("Please select a method")
+        if not self.path:
+            raise ValueError("Please select a method")
         if self.identifier < 0:
             raise ValueError("Method ID cannot be negative")
 

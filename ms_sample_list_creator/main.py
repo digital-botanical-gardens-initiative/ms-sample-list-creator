@@ -4,9 +4,9 @@
 # You can generate windows executable from linux using wine, by previously installing wine, python 3.8.20, pyinstaller and
 # other non-built-in packages (here requests and pandas) inside wine. Then run: wine PyInstaller --onefile main.py
 
-import tkinter as tk
-
+# import tkinter as tk
 import requests
+import ttkbootstrap as tb
 
 from .home import HomeWindow
 from .new_version_available import NewVersionAvailable
@@ -42,7 +42,7 @@ def check_version() -> None:
 
     if tag >= 2.0:
         # Create an instance of new vesion available class
-        root = tk.Tk()
+        root = tb.Window(themename="sandstone")
         root.title("New version available")
         root.minsize(550, 100)
 
@@ -56,7 +56,7 @@ def check_version() -> None:
         root.mainloop()
     else:
         # Create an instance of the main window
-        root = tk.Tk()
+        root = tb.Window(themename="sandstone")
         root.title("Home")
         root.minsize(550, 650)
 

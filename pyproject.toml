@@ -20,6 +20,7 @@ pytest-cov = "^5.0.0"
 pandas = "^2.0.3"
 pandas-stubs = "^2.0.3"
 python-dotenv = "0.21.1"
+ttkbootstrap = "^1.13.10"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.5.1"
@@ -42,6 +43,13 @@ check_untyped_defs = "True"
 warn_return_any = "True"
 warn_unused_ignores = "True"
 show_error_codes = "True"
+ignore_missing_imports = true
+
+[tool.mypy.ms_sample_list_creator.home]
+disallow_any_unimported = false
+
+[tool.mypy.ms_sample_list_creator.sample_list]
+disallow_any_unimported = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

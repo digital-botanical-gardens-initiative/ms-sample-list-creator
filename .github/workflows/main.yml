@@ -45,13 +45,6 @@ jobs:
         with:
           version: 1.8.5
 
-      - name: Show Poetry error log if exists
-        if: failure()
-        run: |
-          echo "Trying to display Poetry installer log:"
-          ls -la /home/runner/work/ms-sample-list-creator/ms-sample-list-creator/
-          cat /home/runner/work/ms-sample-list-creator/ms-sample-list-creator/poetry-installer-error-*.log || echo "No log file found."
-
       - name: Load cached venv
         uses: actions/cache@v3
         with:

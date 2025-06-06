@@ -189,6 +189,9 @@ class SampleList(ttk.Frame):
         # Insert the sample into the treeview
         self.insert_into_treeview()
 
+        # Clear the entry field after adding the sample
+        self.aliquot_id_entry.delete(0, "end")
+
     def insert_into_treeview(self) -> None:
         self.maybe_ask_prefix()
         position = self.generate_rack_position()

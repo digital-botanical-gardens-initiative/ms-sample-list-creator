@@ -210,7 +210,6 @@ def get_aliquot(aliquot_id: str) -> Result[SampleContainer, str]:
         sample_container = SampleContainer(
             name=data[0]["sample_container"]["container_id"], identifier=data[0]["sample_container"]["id"]
         )
-        sample_container = SampleContainer(name=aliquot_id, identifier=1)  # Placeholder for testing
     except requests.RequestException as e:
         return Result(error=e)
 
@@ -234,7 +233,8 @@ def insert_ms_sample(timestamp: str, operator: str, sample: SampleData) -> Resul
         )
 
     url = "https://emi-collection.unifr.ch/directus/items/MS_Data"
-    headers = {"Authorization": f"Bearer {TokenManager().get_token()}", "Content-Type": "application/json"}
+    token = TokenManager().get_token()
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
     try:
         response = requests.post(url=url, json=payload, timeout=10, headers=headers)

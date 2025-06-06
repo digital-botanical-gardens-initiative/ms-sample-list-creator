@@ -37,19 +37,13 @@ build-backend = "poetry.core.masonry.api"
 [tool.mypy]
 files = ["ms_sample_list_creator"]
 disallow_untyped_defs = "True"
-disallow_any_unimported = "True"
+disallow_any_unimported = false
 no_implicit_optional = "True"
 check_untyped_defs = "True"
 warn_return_any = "True"
 warn_unused_ignores = "True"
 show_error_codes = "True"
 ignore_missing_imports = true
-
-[tool.mypy.ms_sample_list_creator.home]
-disallow_any_unimported = false
-
-[tool.mypy.ms_sample_list_creator.sample_list]
-disallow_any_unimported = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

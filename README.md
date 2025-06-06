@@ -70,4 +70,4 @@ If you would like to contribute to this project or report issues, please follow 
 
 ## License
 
-see [LICENSE](https://github.com/digital-botanical-gardens-initiative/qfieldcloud-fetcher/blob/main/LICENSE) for details.
+see [LICENSE](https://github.com/digital-botanical-gardens-initiative/ms-sample-list-creator/LICENSE) for details.

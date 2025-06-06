@@ -194,23 +194,22 @@ def get_aliquot(aliquot_id: str) -> Result[SampleContainer, str]:
     if not aliquot_id:
         return Result(error="Aliquot ID cannot be empty")
 
-    # base_url = "https://emi-collection.unifr.ch/directus/items/Aliquoting_Data"
+    base_url = "https://emi-collection.unifr.ch/directus/items/Aliquoting_Data"
 
-    # params = {
-    #     "filter[sample_container][container_id][_eq]": aliquot_id,
-    #     "fields": "sample_container.container_id,sample_container.id",
-    # }
+    params = {
+        "filter[sample_container][container_id][_eq]": aliquot_id,
+        "fields": "sample_container.container_id,sample_container.id",
+    }
 
     try:
-        # TODO: Uncomment this for production use
-        # response = requests.get(f"{base_url}", params=params, timeout=10)
-        # response.raise_for_status()
-        # data = response.json().get("data", [])
-        # if not data:
-        #     return Result(error=f"No aliquot found with ID: {aliquot_id}")
-        # sample_container = SampleContainer(
-        #     name=data[0]["sample_container"]["container_id"], identifier=data[0]["sample_container"]["id"]
-        # )
+        response = requests.get(f"{base_url}", params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json().get("data", [])
+        if not data:
+            return Result(error=f"No aliquot found with ID: {aliquot_id}")
+        sample_container = SampleContainer(
+            name=data[0]["sample_container"]["container_id"], identifier=data[0]["sample_container"]["id"]
+        )
         sample_container = SampleContainer(name=aliquot_id, identifier=1)  # Placeholder for testing
     except requests.RequestException as e:
         return Result(error=e)
@@ -234,13 +233,12 @@ def insert_ms_sample(timestamp: str, operator: str, sample: SampleData) -> Resul
             }
         )
 
-    # url = "https://emi-collection.unifr.ch/directus/items/MS_Datakjsdléjfasdj"
-    # headers = {"Authorization": f"Bearer {TokenManager().get_token()}", "Content-Type": "application/json"}
+    url = "https://emi-collection.unifr.ch/directus/items/MS_Data"
+    headers = {"Authorization": f"Bearer {TokenManager().get_token()}", "Content-Type": "application/json"}
 
     try:
-        #     # TODO: Uncomment this for production use
-        #     response = requests.post(url=url, json=payload, timeout=10, headers=headers)
-        #     response.raise_for_status()
+        response = requests.post(url=url, json=payload, timeout=10, headers=headers)
+        response.raise_for_status()
         return Result(value=True)
     except requests.HTTPError as e:
         return Result(error=f"HTTPError while inserting samples: {e}")

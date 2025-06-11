@@ -33,7 +33,7 @@ def check_version() -> None:
     data = response.json()["tag_name"]
     tag = float(str.replace(data, "v.", ""))
 
-    if tag > 2.0:
+    if tag > 2.1:
         # Create an instance of new vesion available class
         root = tb.Window(themename="sandstone")
         root.title("New version available")

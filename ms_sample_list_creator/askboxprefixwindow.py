@@ -10,7 +10,6 @@ class AskBoxPrefixWindow(tk.Frame):
 
         Args:
             root(tk.Toplevel): The parent widget or window where this frame will be placed.
-            csv_path(str): CSV path and name.
 
         Returns:
             None

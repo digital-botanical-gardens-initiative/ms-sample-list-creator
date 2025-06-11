@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
+
 from ttkbootstrap import ttk
-from typing import Optional
 
 
 class AskCsvSorting(tk.Frame):
@@ -27,14 +27,10 @@ class AskCsvSorting(tk.Frame):
         label_choice = tk.Label(self, text="How do you want to sort the CSV file?")
         label_choice.pack(padx=10, pady=10)
 
-        separated_method_button = ttk.Radiobutton(
-            self, text="Separate methods", variable=self.choice, value=True
-        )
+        separated_method_button = ttk.Radiobutton(self, text="Separate methods", variable=self.choice, value=True)
         separated_method_button.pack(anchor=tk.W)
 
-        alterned_method_button = ttk.Radiobutton(
-            self, text="Alternate methods", variable=self.choice, value=False
-        )
+        alterned_method_button = ttk.Radiobutton(self, text="Alternate methods", variable=self.choice, value=False)
         alterned_method_button.pack(anchor=tk.W, pady=(0, 20))
 
         # Submit button

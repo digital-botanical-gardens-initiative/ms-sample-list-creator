@@ -165,7 +165,9 @@ def get_methods(methods_list: List[str]) -> Result[List[Method], str]:
     # Existing methods from Directus
     existing_methods = {
         method["method_name"]: Method(
-            name=method["method_name"], path=method_paths.get(method["method_name"]), identifier=method["id"]
+            name=method["method_name"],
+            path=method_paths.get(method["method_name"]).replace(".meth", ""),
+            identifier=method["id"],
         )
         for method in data
     }
@@ -181,7 +183,9 @@ def get_methods(methods_list: List[str]) -> Result[List[Method], str]:
                 post_response.raise_for_status()
                 created = post_response.json()["data"]
                 method = Method(
-                    name=created["method_name"], path=method_paths.get(created["method_name"]), identifier=created["id"]
+                    name=created["method_name"],
+                    path=method_paths.get(created["method_name"]).replace(".meth", ""),
+                    identifier=created["id"],
                 )
                 results.append(method)
             except requests.RequestException as e:

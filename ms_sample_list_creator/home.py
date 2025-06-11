@@ -343,7 +343,7 @@ class HomeWindow(ttk.Frame):
 
             paths = ProjectPath(
                 methods=methods,
-                standby=self.standby_path.get(),
+                standby=self.standby_path.get().replace(".meth", ""),
                 data=self.data_path.get(),
                 output=self.output_path.get(),
             )

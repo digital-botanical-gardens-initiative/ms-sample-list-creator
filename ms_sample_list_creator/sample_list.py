@@ -8,6 +8,7 @@ import ttkbootstrap as tb
 from ttkbootstrap import ttk
 
 from ms_sample_list_creator.askboxprefixwindow import AskBoxPrefixWindow
+from ms_sample_list_creator.askcsvsorting import AskCsvSorting
 from ms_sample_list_creator.structure import (
     Batch,
     Blank,
@@ -142,7 +143,9 @@ class SampleList(ttk.Frame):
         button_frame = ttk.Frame(self.window)
         button_frame.pack(pady=10)
 
-        submit_button = ttk.Button(button_frame, text="Generate sample list", width=20, command=self.submit_table)
+        submit_button = ttk.Button(
+            button_frame, text="Generate sample list", width=20, bootstyle="success", command=self.submit_table
+        )
         submit_button.pack(side="left", padx=10)
 
         button_back = ttk.Button(button_frame, text="Back to Home", width=20, command=self.on_exit)
@@ -250,7 +253,16 @@ class SampleList(ttk.Frame):
             messagebox.showerror("Error", "No data to export!")
             return
 
-        self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        ask_choice_window = tk.Toplevel(self.window)
+        ask_choice_window.title("Choose CSV Sorting Method")
+
+        self.ask_choice = AskCsvSorting(ask_choice_window)
+        self.ask_choice.pack(padx=10, pady=10, fill="both", expand=True)
+
+        ask_choice_window.transient(self.window)
+        ask_choice_window.wait_window(self.ask_choice)
+
+        self.choice = self.ask_choice.result
 
         self.build_samples_from_treeview()
         self.add_pre_blanks()
@@ -329,8 +341,7 @@ class SampleList(ttk.Frame):
     def export_csv(self) -> None:
         """Exports the sample list to a CSV file in the correct order."""
         try:
-            # order the samples and blanks for the csv list
-            ordered_samples = self.pre_blank + self.blk_sample + self.samples + self.post_blank + self.standby
+            ordered_samples = self.order_samples()
 
             if not ordered_samples:
                 messagebox.showwarning("No samples to export.")
@@ -338,6 +349,9 @@ class SampleList(ttk.Frame):
 
             with open(f"{self.paths.output}/{self.timestamp}_sample_list.csv", mode="w", newline="") as file:
                 writer = csv.writer(file)
+                # Write headers
+                writer.writerow(["Bracket Type=4", "", "", "", ""])
+                writer.writerow(["File Name", "Path", "Instrument Method", "Position", "Inj Vol"])
 
                 for row in ordered_samples:
                     writer.writerow(
@@ -350,6 +364,28 @@ class SampleList(ttk.Frame):
 
         except Exception as e:
             messagebox.showerror("Error", f"Sample list couldn't be generated: {e}")
+
+    def order_samples(self) -> List[SampleListData]:
+        # Order depending on user choice
+        if self.choice:
+            ordered_samples: List[SampleListData] = []
+            for method in self.methods:
+                method_path = method.path.replace("/", "\\")
+
+                for sample_list, _ in [
+                    (self.pre_blank, "pre_blank"),
+                    (self.blk_sample, "blk_sample"),
+                    (self.samples, "sample"),
+                    (self.post_blank, "post_blank"),
+                ]:
+                    for item in sample_list:
+                        if item.method_file == method_path:
+                            ordered_samples.append(item)
+
+            ordered_samples.append(self.standby[0])
+        else:
+            ordered_samples = self.pre_blank + self.blk_sample + self.samples + self.post_blank + self.standby
+        return ordered_samples
 
     def on_exit(self) -> None:
         """
